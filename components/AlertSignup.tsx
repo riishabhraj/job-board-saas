@@ -27,32 +27,37 @@ export function AlertSignup() {
   return (
     <section
       id="alerts"
-      className="flex scroll-mt-6 flex-col gap-4 rounded-control border border-border bg-surface p-6 md:flex-row md:items-center md:gap-6"
+      className="w-full scroll-mt-20 border-t border-subtle px-8 py-[72px]"
     >
-      <div className="flex flex-1 flex-col gap-1">
-        <h2 className="text-lg font-semibold">A little less searching.</h2>
-        <p className="text-[13px] text-muted" aria-live="polite">
+      <div className="mx-auto flex max-w-[620px] flex-col items-center gap-4 rounded-2xl border border-border bg-surface p-[44px_36px] text-center">
+        <h2 className="text-[26px] font-extrabold tracking-[-0.02em]">
+          A little less searching.
+        </h2>
+        <p className="text-[15px] text-muted" aria-live="polite">
           {status === "done"
             ? "Thanks. We'll email you new openings."
             : status === "error"
               ? "Something went wrong. Check your email and try again."
-              : "Get new openings delivered to your inbox."}
+              : "Get new openings delivered to your inbox — only the ones you're actually eligible for."}
         </p>
+        <form
+          onSubmit={onSubmit}
+          className="flex w-full max-w-[420px] flex-wrap gap-2.5"
+        >
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@email.com"
+            aria-label="Email address"
+            className="min-w-[180px] flex-1 rounded-lg border border-[#26262e] bg-bg px-3.5 py-3 text-sm text-text"
+          />
+          <Button type="submit" disabled={status === "sending"}>
+            Get alerts
+          </Button>
+        </form>
       </div>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email address"
-          aria-label="Your email address"
-          className="h-[45px] w-full rounded-control border border-border bg-transparent px-3 text-[13px] text-text placeholder:text-muted sm:w-[220px]"
-        />
-        <Button type="submit" disabled={status === "sending"}>
-          Get job alerts
-        </Button>
-      </form>
     </section>
   );
 }

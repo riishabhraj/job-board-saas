@@ -1,18 +1,34 @@
+import Link from "next/link";
 import { buttonClass } from "./Button";
 
 export function Navbar() {
   return (
-    <header className="mx-auto flex w-full max-w-[1200px] items-center gap-6 px-5 py-6 md:px-20">
-      <a href="/" className="text-xl font-semibold">
-        jobboard
-      </a>
-      <div className="flex-1" />
-      <a href="/#jobs" className="text-sm font-medium whitespace-nowrap">
-        Browse jobs
-      </a>
-      <a href="/#alerts" className={buttonClass("secondary")}>
-        Get job alerts
-      </a>
+    <header className="sticky top-0 z-10 w-full border-b border-subtle bg-bg/90 backdrop-blur">
+      <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-4 px-8 py-[18px]">
+        <Link href="/" className="text-lg font-bold tracking-[-0.02em]">
+          jobboard
+        </Link>
+        <nav className="flex flex-wrap items-center gap-7">
+          <Link
+            href="/jobs"
+            className="text-sm whitespace-nowrap text-muted transition-colors hover:text-text"
+          >
+            Browse jobs
+          </Link>
+          <Link
+            href="/#alerts"
+            className="text-sm whitespace-nowrap text-muted transition-colors hover:text-text"
+          >
+            Get job alerts
+          </Link>
+          <Link
+            href="/jobs"
+            className={`${buttonClass("light")} !h-auto rounded-[7px] px-[18px] py-[9px]`}
+          >
+            Browse jobs ↗
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }

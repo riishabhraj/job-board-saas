@@ -1,23 +1,27 @@
 import { AlertSignup } from "@/components/AlertSignup";
+import { Comparison } from "@/components/Comparison";
+import { Differentiators } from "@/components/Differentiators";
+import { Faq } from "@/components/Faq";
 import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
-import { JobSearch } from "@/components/JobSearch";
+import { HeroSearch } from "@/components/HeroSearch";
 import { Navbar } from "@/components/Navbar";
-import { jobs } from "@/lib/jobs";
+import { ProductPreview } from "@/components/ProductPreview";
 
 export default function Home() {
-  // Passed down so server and client render identical freshness labels.
-  const now = Date.now();
-
   return (
     <>
       <Navbar />
-      <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-5 py-10 md:px-20">
+      <main className="flex min-h-screen flex-col">
         <Hero />
-        <JobSearch jobs={jobs} now={now} />
+        <ProductPreview />
+        <HeroSearch />
+        <Differentiators />
+        <Comparison />
+        <Faq />
         <AlertSignup />
-        <Footer />
       </main>
+      <Footer />
     </>
   );
 }

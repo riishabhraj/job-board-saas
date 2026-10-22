@@ -49,9 +49,20 @@ function FilterSelect({
   );
 }
 
-export function JobSearch({ jobs, now }: { jobs: Job[]; now: number }) {
-  const [draft, setDraft] = useState("");
-  const [filters, setFilters] = useState<Filters>(emptyFilters);
+export function JobSearch({
+  jobs,
+  now,
+  initialQuery = "",
+}: {
+  jobs: Job[];
+  now: number;
+  initialQuery?: string;
+}) {
+  const [draft, setDraft] = useState(initialQuery);
+  const [filters, setFilters] = useState<Filters>({
+    ...emptyFilters,
+    query: initialQuery,
+  });
 
   const results = useMemo(
     () =>
@@ -72,7 +83,7 @@ export function JobSearch({ jobs, now }: { jobs: Job[]; now: number }) {
             e.preventDefault();
             set({ query: draft });
           }}
-          className="flex flex-col gap-3 rounded-control border border-border bg-surface p-3 focus-within:border-muted sm:flex-row sm:items-center sm:gap-4"
+          className="flex flex-col gap-3 rounded-xl border border-border bg-surface-2 p-2 focus-within:border-muted sm:flex-row sm:items-center sm:gap-4"
         >
           <input
             type="search"
@@ -83,7 +94,7 @@ export function JobSearch({ jobs, now }: { jobs: Job[]; now: number }) {
             }}
             placeholder="Search roles or companies"
             aria-label="Search roles or companies"
-            className="min-w-0 flex-1 bg-transparent text-base text-text placeholder:text-muted focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent px-3.5 py-3 text-[15px] text-text focus:outline-none"
           />
           <Button type="submit" className="w-full sm:w-auto">
             Search jobs
