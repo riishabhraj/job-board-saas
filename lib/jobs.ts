@@ -1,5 +1,6 @@
 export type WorkArrangement = "remote" | "hybrid" | "on-site";
 export type EmploymentType = "Full-time" | "Part-time" | "Contract";
+export type JobSource = "Greenhouse" | "Lever" | "Ashby" | "Company careers";
 
 /**
  * Normalized job shape (see product spec §10). Only the fields the landing
@@ -24,12 +25,17 @@ export interface Job {
   skills: string[];
   /** ISO timestamp of when we first discovered the opening. */
   discoveredAt: string;
+  /** Where the opening was found. */
+  source: JobSource;
+  /** ISO timestamp of the last successful check against the original source. */
+  lastVerifiedAt: string;
   /** Original application URL at the company's own site / ATS. */
   applyUrl: string;
 }
 
-const hoursAgo = (h: number) =>
-  new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
+const minutesAgo = (m: number) =>
+  new Date(Date.now() - m * 60 * 1000).toISOString();
+const hoursAgo = (h: number) => minutesAgo(h * 60);
 
 // Sample data until the ingestion pipeline and database exist.
 export const jobs: Job[] = [
@@ -44,6 +50,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["React", "TypeScript"],
     discoveredAt: hoursAgo(2),
+    source: "Greenhouse",
+    lastVerifiedAt: minutesAgo(17),
     applyUrl: "https://example.com/northstar/careers/frontend-engineer",
   },
   {
@@ -58,6 +66,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["Figma", "Product design"],
     discoveredAt: hoursAgo(4),
+    source: "Ashby",
+    lastVerifiedAt: minutesAgo(28),
     applyUrl: "https://example.com/forma/careers/product-designer",
   },
   {
@@ -71,6 +81,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["Node.js", "PostgreSQL"],
     discoveredAt: hoursAgo(6),
+    source: "Lever",
+    lastVerifiedAt: minutesAgo(41),
     applyUrl: "https://example.com/arcwell/careers/backend-engineer",
   },
   {
@@ -85,6 +97,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["React", "Python"],
     discoveredAt: hoursAgo(8),
+    source: "Company careers",
+    lastVerifiedAt: minutesAgo(95),
     applyUrl: "https://example.com/plainfield/careers/full-stack-developer",
   },
 ];

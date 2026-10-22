@@ -72,7 +72,7 @@ export function JobSearch({ jobs, now }: { jobs: Job[]; now: number }) {
             e.preventDefault();
             set({ query: draft });
           }}
-          className="flex items-center gap-4 rounded-control border border-border bg-surface p-3 focus-within:border-muted"
+          className="flex flex-col gap-3 rounded-control border border-border bg-surface p-3 focus-within:border-muted sm:flex-row sm:items-center sm:gap-4"
         >
           <input
             type="search"
@@ -85,7 +85,9 @@ export function JobSearch({ jobs, now }: { jobs: Job[]; now: number }) {
             aria-label="Search roles or companies"
             className="min-w-0 flex-1 bg-transparent text-base text-text placeholder:text-muted focus:outline-none"
           />
-          <Button type="submit">Search jobs</Button>
+          <Button type="submit" className="w-full sm:w-auto">
+            Search jobs
+          </Button>
         </form>
         <div className="flex flex-wrap gap-2">
           <FilterSelect

@@ -66,20 +66,25 @@ export function filterJobs(jobs: Job[], f: Filters): Job[] {
   });
 }
 
-export function locationLabel(j: Job): string {
-  return j.workArrangement === "remote"
-    ? `Remote · ${j.eligibility}`
-    : `${j.city} · ${arrangementLabels[j.workArrangement]}`;
+export function eligibilityLabel(j: Job): string {
+  if (j.workArrangement !== "remote") {
+    return `${arrangementLabels[j.workArrangement]} — ${j.city}`;
+  }
+  return j.eligibility === "Worldwide"
+    ? "Remote — Worldwide"
+    : `Remote — ${j.eligibility} eligible`;
 }
 
 export function experienceLabel(j: Job): string {
-  return `${j.minYears}–${j.maxYears} years`;
+  return `${j.minYears}–${j.maxYears} yrs`;
 }
 
-export function freshnessLabel(discoveredAt: string, now: number): string {
-  const hours = Math.floor((now - Date.parse(discoveredAt)) / 3_600_000);
-  if (hours < 1) return "First found just now";
-  if (hours < 24) return `First found ${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `First found ${days}d ago`;
+/** "17m ago", "2h ago", "3d ago". */
+export function ago(iso: string, now: number): string {
+  const minutes = Math.max(0, Math.floor((now - Date.parse(iso)) / 60_000));
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }

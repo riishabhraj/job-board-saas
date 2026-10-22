@@ -7,10 +7,10 @@ export function Navbar() {
         jobboard
       </a>
       <div className="flex-1" />
-      <a href="#jobs" className="text-sm font-medium">
+      <a href="/#jobs" className="text-sm font-medium whitespace-nowrap">
         Browse jobs
       </a>
-      <a href="#alerts" className={buttonClass("secondary")}>
+      <a href="/#alerts" className={buttonClass("secondary")}>
         Get job alerts
       </a>
     </header>
