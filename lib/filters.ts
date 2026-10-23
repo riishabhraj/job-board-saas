@@ -33,13 +33,23 @@ export const emptyFilters: Filters = {
   experience: "",
 };
 
-/** Locations offered in the filter: every eligibility region except Worldwide. */
-export function locationOptions(jobs: Job[]): string[] {
-  return [
-    ...new Set(
-      jobs.map((j) => j.eligibility).filter((e) => e !== "Worldwide"),
-    ),
-  ].sort();
+/**
+ * Locations offered in the filter: the most common eligibility values,
+ * excluding Worldwide (always matched) and Unspecified.
+ */
+export function locationOptions(jobs: Job[], limit = 15): string[] {
+  const counts = new Map<string, number>();
+  for (const j of jobs) {
+    if (j.eligibility === "Worldwide" || j.eligibility === "Unspecified") {
+      continue;
+    }
+    counts.set(j.eligibility, (counts.get(j.eligibility) ?? 0) + 1);
+  }
+  return [...counts]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([name]) => name)
+    .sort();
 }
 
 export function filterJobs(jobs: Job[], f: Filters): Job[] {
@@ -59,8 +69,11 @@ export function filterJobs(jobs: Job[], f: Filters): Job[] {
       if (!open && j.eligibility !== f.location) return false;
     }
     if (f.arrangement && j.workArrangement !== f.arrangement) return false;
-    if (bucket && (j.maxYears < bucket.min || j.minYears > bucket.max)) {
-      return false;
+    if (bucket) {
+      // Postings that do not state experience cannot match an experience filter.
+      if (j.minYears === null) return false;
+      const max = j.maxYears ?? Infinity;
+      if (max < bucket.min || j.minYears > bucket.max) return false;
     }
     return true;
   });
@@ -70,12 +83,15 @@ export function eligibilityLabel(j: Job): string {
   if (j.workArrangement !== "remote") {
     return `${arrangementLabels[j.workArrangement]} — ${j.city}`;
   }
-  return j.eligibility === "Worldwide"
-    ? "Remote — Worldwide"
-    : `Remote — ${j.eligibility} eligible`;
+  if (j.eligibility === "Worldwide") return "Remote — Worldwide";
+  if (j.eligibility === "Unspecified") return "Remote — location not specified";
+  return `Remote — ${j.eligibility} eligible`;
 }
 
 export function experienceLabel(j: Job): string {
+  if (j.minYears === null) return "Experience not stated";
+  if (j.maxYears === null) return `${j.minYears}+ yrs`;
+  if (j.maxYears === j.minYears) return `${j.minYears} yrs`;
   return `${j.minYears}–${j.maxYears} yrs`;
 }
 

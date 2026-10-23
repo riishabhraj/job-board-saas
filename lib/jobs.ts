@@ -1,5 +1,9 @@
 export type WorkArrangement = "remote" | "hybrid" | "on-site";
-export type EmploymentType = "Full-time" | "Part-time" | "Contract";
+export type EmploymentType =
+  | "Full-time"
+  | "Part-time"
+  | "Contract"
+  | "Internship";
 export type JobSource = "Greenhouse" | "Lever" | "Ashby" | "Company careers";
 
 /**
@@ -14,17 +18,20 @@ export interface Job {
   city?: string;
   workArrangement: WorkArrangement;
   /**
-   * Where a candidate must be based. "Worldwide" for open remote roles,
-   * otherwise a country or region ("India", "Europe", ...). For hybrid and
-   * on-site roles this is the country the role is located in.
+   * Where a candidate must be based. "Worldwide" for open remote roles, a
+   * country or region ("India", "Europe", ...) when stated, and "Unspecified"
+   * when a remote posting does not say. For hybrid and on-site roles this is
+   * the raw location.
    */
   eligibility: string;
-  minYears: number;
-  maxYears: number;
+  /** Years of experience asked for; null when the posting does not say. */
+  minYears: number | null;
+  /** null with a non-null minYears means open-ended ("5+ years"). */
+  maxYears: number | null;
   employmentType: EmploymentType;
   skills: string[];
-  /** ISO timestamp of when we first discovered the opening. */
-  discoveredAt: string;
+  /** ISO timestamp the company published the opening (or we first saw it). */
+  postedAt: string;
   /** Where the opening was found. */
   source: JobSource;
   /** ISO timestamp of the last successful check against the original source. */
@@ -49,7 +56,7 @@ export const jobs: Job[] = [
     maxYears: 4,
     employmentType: "Full-time",
     skills: ["React", "TypeScript"],
-    discoveredAt: hoursAgo(2),
+    postedAt: hoursAgo(2),
     source: "Greenhouse",
     lastVerifiedAt: minutesAgo(17),
     applyUrl: "https://example.com/northstar/careers/frontend-engineer",
@@ -65,7 +72,7 @@ export const jobs: Job[] = [
     maxYears: 5,
     employmentType: "Full-time",
     skills: ["Figma", "Product design"],
-    discoveredAt: hoursAgo(4),
+    postedAt: hoursAgo(4),
     source: "Ashby",
     lastVerifiedAt: minutesAgo(28),
     applyUrl: "https://example.com/forma/careers/product-designer",
@@ -80,7 +87,7 @@ export const jobs: Job[] = [
     maxYears: 6,
     employmentType: "Full-time",
     skills: ["Node.js", "PostgreSQL"],
-    discoveredAt: hoursAgo(6),
+    postedAt: hoursAgo(6),
     source: "Lever",
     lastVerifiedAt: minutesAgo(41),
     applyUrl: "https://example.com/arcwell/careers/backend-engineer",
@@ -96,7 +103,7 @@ export const jobs: Job[] = [
     maxYears: 3,
     employmentType: "Full-time",
     skills: ["React", "Python"],
-    discoveredAt: hoursAgo(8),
+    postedAt: hoursAgo(8),
     source: "Company careers",
     lastVerifiedAt: minutesAgo(95),
     applyUrl: "https://example.com/plainfield/careers/full-stack-developer",

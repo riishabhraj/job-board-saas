@@ -19,7 +19,7 @@ export function JobRow({ job, now }: { job: Job; now: number }) {
       <div className="flex items-center justify-between gap-4 md:flex-col md:items-end md:gap-2">
         <div className="flex flex-col gap-1 text-[13px] text-muted md:items-end">
           <p className="text-text">
-            Found {ago(job.discoveredAt, now)} · Verified active
+            Posted {ago(job.postedAt, now)} · Verified active
           </p>
           <p>
             Source: {job.source} · Checked {ago(job.lastVerifiedAt, now)}

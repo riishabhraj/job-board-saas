@@ -13,6 +13,8 @@ import {
 } from "@/lib/filters";
 import type { Job } from "@/lib/jobs";
 
+const PAGE_SIZE = 50;
+
 function FilterSelect({
   label,
   value,
@@ -53,10 +55,12 @@ export function JobSearch({
   jobs,
   now,
   initialQuery = "",
+  note,
 }: {
   jobs: Job[];
   now: number;
   initialQuery?: string;
+  note: string;
 }) {
   const [draft, setDraft] = useState(initialQuery);
   const [filters, setFilters] = useState<Filters>({
@@ -67,12 +71,15 @@ export function JobSearch({
   const results = useMemo(
     () =>
       filterJobs(jobs, filters).sort(
-        (a, b) => Date.parse(b.discoveredAt) - Date.parse(a.discoveredAt),
+        (a, b) => Date.parse(b.postedAt) - Date.parse(a.postedAt),
       ),
     [jobs, filters],
   );
-  const set = (patch: Partial<Filters>) =>
+  const [shown, setShown] = useState(PAGE_SIZE);
+  const set = (patch: Partial<Filters>) => {
+    setShown(PAGE_SIZE);
     setFilters((f) => ({ ...f, ...patch }));
+  };
 
   return (
     <>
@@ -132,7 +139,7 @@ export function JobSearch({
         </div>
         {results.length > 0 ? (
           <ul className="overflow-hidden rounded-control border border-border">
-            {results.map((job) => (
+            {results.slice(0, shown).map((job) => (
               <JobRow key={job.id} job={job} now={now} />
             ))}
           </ul>
@@ -141,12 +148,16 @@ export function JobSearch({
             No openings match these filters.
           </p>
         )}
-        <div className="flex items-start text-[13px] text-muted">
-          <p className="flex-1">Sample listings for design preview</p>
-          <a href="#jobs" className="text-sm font-medium text-accent">
-            Browse all jobs →
-          </a>
-        </div>
+        {results.length > shown && (
+          <Button
+            variant="secondary"
+            className="self-center"
+            onClick={() => setShown((n) => n + PAGE_SIZE)}
+          >
+            Show more ({results.length - shown} remaining)
+          </Button>
+        )}
+        <p className="text-[13px] text-muted">{note}</p>
       </section>
     </>
   );
