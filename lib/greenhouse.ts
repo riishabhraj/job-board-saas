@@ -47,7 +47,7 @@ export function htmlToText(content: string): string {
 // ---- title filter -------------------------------------------------------
 
 const TECH_TITLE =
-  /engineer|developer|software|devops|\bsre\b|site reliability|security|\bdata\b|machine learning|\bml\b|\bai\b|scientist|product manager|product design|designer|\bux\b|\bui\b|\bqa\b|quality|architect|platform|infrastructure|developer advocate|devrel|technical|solutions/i;
+  /engineer|developer|software|devops|\bsre\b|site reliability|security|\bdata\b|machine learning|\bml\b|\bai\b|scientist|product manager|product design|designer|\bux\b|\bui\b|\bqa\b|quality|architect|platform|infrastructure|developer advocate|devrel/i;
 const NON_TECH_TITLE =
   /sales|account executive|recruit|marketing|legal|counsel|financ|accountant|people partner|talent|payroll|customer success|business development|coordinator|executive assistant|\bpr\b|communications/i;
 const ENGINEERING_TITLE = /engineer|developer|\bsre\b/i;
