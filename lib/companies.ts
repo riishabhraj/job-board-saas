@@ -36,11 +36,7 @@ export const companies: Company[] = [
   // Lever
   { name: "Spotify", ats: "lever", token: "spotify" },
   { name: "Palantir", ats: "lever", token: "palantir" },
-  { name: "Plaid", ats: "lever", token: "plaid" },
-  { name: "Mistral AI", ats: "lever", token: "mistral" },
   { name: "Outreach", ats: "lever", token: "outreach" },
-  { name: "Attentive", ats: "lever", token: "attentive" },
-  { name: "Anyscale", ats: "lever", token: "anyscale" },
   // Ashby
   { name: "OpenAI", ats: "ashby", token: "openai" },
   { name: "Linear", ats: "ashby", token: "linear" },
@@ -54,7 +50,5 @@ export const companies: Company[] = [
   { name: "ClickHouse", ats: "ashby", token: "clickhouse" },
   { name: "ElevenLabs", ats: "ashby", token: "elevenlabs" },
   { name: "Vanta", ats: "ashby", token: "vanta" },
-  { name: "Retool", ats: "ashby", token: "retool" },
-  { name: "Perplexity", ats: "ashby", token: "perplexity-ai" },
   { name: "Modal", ats: "ashby", token: "modal" },
 ];
