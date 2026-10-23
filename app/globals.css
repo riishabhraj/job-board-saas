@@ -9,7 +9,7 @@
   --color-subtle: #1a1a1e;
   --color-text: #f2f2f4;
   --color-muted: #9fa0a6;
-  --color-dim: #75757c;
+  --color-dim: #8a8a92;
   --color-faint: #8b8b93;
   --color-accent: #7c9cff;
   --color-on-accent: #0b0c10;
@@ -35,7 +35,7 @@ body {
     outline-offset: 2px;
   }
   input::placeholder {
-    color: #6e6e76;
+    color: #85858c;
   }
 }
 
@@ -48,7 +48,7 @@ details > summary::-webkit-details-marker {
 details > summary::after {
   content: "+";
   float: right;
-  color: #6e6e76;
+  color: #8b8b93;
 }
 details[open] > summary::after {
   content: "\2013";

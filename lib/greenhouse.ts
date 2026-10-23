@@ -34,7 +34,8 @@ export function normalize(
       id: String(j.id),
       title: j.title,
       url: j.absolute_url,
-      postedAt: j.first_published ?? j.updated_at,
+      postedAt: j.first_published,
+      updatedAt: j.updated_at,
       location: j.location?.name ?? "",
       // Greenhouse returns the description as escaped HTML.
       text: j.content ? htmlToText(j.content) : "",

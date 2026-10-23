@@ -1,23 +1,27 @@
 const faqs = [
   [
     "Why not just use LinkedIn or Indeed?",
-    "Because the listing you see there is usually a copy — sometimes weeks old, sometimes already filled. We index the original company posting directly, so what you see is what’s actually open.",
+    "Those boards often show copies or reposts of a company’s original posting, which can be out of date. jobboard loads each posting from the company’s own career board and links straight to the page the company published. We aren’t a replacement for those sites — we cover a smaller, curated set of companies.",
   ],
   [
-    "How do you verify a job is still active?",
-    "We periodically revisit the original source. If a role disappears from the company’s career page or ATS, it’s marked inactive here within hours, not months.",
+    "How do you know a job is still open?",
+    "Listings are fetched from each company’s board and refreshed about every 15 minutes, and every row shows when we last checked. If a role is removed from the company’s board, it disappears from our feed at the next refresh. We don’t keep a history of past listings, and a role can close between refreshes — the company’s page is always the final word.",
+  ],
+  [
+    "How accurate are the location and experience labels?",
+    "They’re read automatically from the posting text. When a posting doesn’t say — a plain “Remote”, or no years of experience — we say so instead of guessing. Check the company’s page before you apply.",
+  ],
+  [
+    "Which jobs and companies do you cover?",
+    "We currently pull technology roles, picked by job title, from a curated list of companies that publish on Greenhouse, Lever and Ashby, and show the newest few hundred. That’s a slice of what’s open, not everything. We add companies over time.",
   ],
   [
     "Do I need an account to browse?",
-    "No. Search, filter, and open any listing without signing up.",
+    "No. Search, filter and open any listing without signing up.",
   ],
   [
-    "Is it free for candidates?",
-    "Yes, and it stays that way. Companies pay to promote listings later on — browsing and applying never costs you anything.",
-  ],
-  [
-    "Which companies do you track?",
-    "We start with a curated set of startups and technology companies on Greenhouse, Lever, and Ashby, and expand from there.",
+    "Is it free?",
+    "Yes. There’s no account, and nothing to pay to browse or to apply on a company’s own page.",
   ],
 ];
 

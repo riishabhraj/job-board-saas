@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./Button";
+import { cleanTerm, trackEvent } from "@/lib/analytics";
 
 export function HeroSearch() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export function HeroSearch() {
           onSubmit={(e) => {
             e.preventDefault();
             const q = query.trim();
+            if (q) trackEvent("search_submitted", { term: cleanTerm(q), from: "landing" });
             router.push(q ? `/jobs?q=${encodeURIComponent(q)}` : "/jobs");
           }}
           className="flex w-full gap-2.5 rounded-xl border border-border bg-surface-2 p-2"
@@ -33,7 +35,7 @@ export function HeroSearch() {
           </Button>
         </form>
         <p className="text-[13px] text-faint">
-          Indexing from Greenhouse · Lever · Ashby · direct career pages
+          Pulling from Greenhouse · Lever · Ashby company boards
         </p>
       </div>
     </section>

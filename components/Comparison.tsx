@@ -1,16 +1,28 @@
 const rows = [
-  ["Source", "Copied from other job boards", "Original company career page"],
-  ["Remote label", 'Just "Remote"', "Explicit — Worldwide, India, US-only…"],
+  [
+    "Source",
+    "Often copied or syndicated from other boards",
+    "The company's own career board",
+  ],
+  [
+    "Remote label",
+    'Often just "Remote"',
+    "As stated in the posting — Worldwide, India, US-only…",
+  ],
   [
     "Freshness",
-    "Often stale or reposted",
-    "Found-time + verified-active timestamp",
+    "Can be stale or reposted",
+    "Company posting date + last-checked time",
   ],
-  ["Duplicates", "Same role listed 5–6 times", "One canonical listing"],
+  [
+    "Duplicates",
+    "The same role can appear on several boards",
+    "One entry per company posting",
+  ],
   [
     "Applying",
-    "Through the board or Easy Apply",
-    "Directly at the source, every time",
+    "Often through the board or Easy Apply",
+    "Directly on the company's own page",
   ],
 ];
 

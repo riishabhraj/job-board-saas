@@ -1,19 +1,19 @@
 const items = [
   {
-    title: "Eligibility intelligence",
-    desc: "See whether you can actually apply — by country, timezone, or visa requirement — before you open the listing.",
+    title: "Eligibility, spelled out",
+    desc: "Where you can work from, as the posting states it — Remote — Worldwide, Remote — India eligible, or a city — before you open the listing.",
   },
   {
     title: "Freshness, not noise",
-    desc: "Every listing shows when it was found and when it was last verified active. No six-week-old reposts.",
+    desc: "Every listing shows when the company posted it and when we last checked. Roles removed from a company's board drop out of the feed on the next refresh.",
   },
   {
-    title: "Structured, not scraped",
-    desc: "Experience, stack, and remote terms are pulled from the original posting and normalized — not buried in prose.",
+    title: "Structured, not buried",
+    desc: "Experience, tech stack and employment type are read from the original posting and shown in one format — or marked “not stated” when the posting doesn't say.",
   },
   {
     title: "Built for scanning",
-    desc: "Dense, typography-first cards. No feature tours, no filler — just the roles that matter.",
+    desc: "Dense, typography-first rows. No feature tours, no filler — just the roles that matter.",
   },
 ];
 

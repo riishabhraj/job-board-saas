@@ -13,7 +13,11 @@ export const experienceBuckets: ExperienceBucket[] = [
   { value: "6+", label: "6+ years", min: 6, max: Infinity },
 ];
 
-export const arrangementLabels: Record<WorkArrangement, string> = {
+/** Arrangements a user can filter by. "unspecified" is deliberately absent. */
+export const arrangementLabels: Record<
+  Exclude<WorkArrangement, "unspecified">,
+  string
+> = {
   remote: "Remote",
   hybrid: "Hybrid",
   "on-site": "On-site",
@@ -80,12 +84,17 @@ export function filterJobs(jobs: Job[], f: Filters): Job[] {
 }
 
 export function eligibilityLabel(j: Job): string {
-  if (j.workArrangement !== "remote") {
-    return `${arrangementLabels[j.workArrangement]} — ${j.city}`;
+  if (j.workArrangement === "remote") {
+    if (j.eligibility === "Worldwide") return "Remote — Worldwide";
+    if (j.eligibility === "Unspecified") {
+      return "Remote — location not specified";
+    }
+    return `Remote — ${j.eligibility} eligible`;
   }
-  if (j.eligibility === "Worldwide") return "Remote — Worldwide";
-  if (j.eligibility === "Unspecified") return "Remote — location not specified";
-  return `Remote — ${j.eligibility} eligible`;
+  const place = j.city ?? "Location not listed";
+  if (j.workArrangement === "unspecified") return place;
+  const kind = arrangementLabels[j.workArrangement];
+  return j.city ? `${kind} — ${j.city}` : `${kind} — location not listed`;
 }
 
 export function experienceLabel(j: Job): string {
@@ -98,9 +107,25 @@ export function experienceLabel(j: Job): string {
 /** "17m ago", "2h ago", "3d ago". */
 export function ago(iso: string, now: number): string {
   const minutes = Math.max(0, Math.floor((now - Date.parse(iso)) / 60_000));
-  if (minutes < 1) return "just now";
+  if (minutes < 1) return "<1m ago";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+/**
+ * What the company told us about the posting date. Never our own discovery
+ * time: "Posted" is the company's publish date, "Updated" is its last edit.
+ */
+export function dateLabel(j: Job, now: number): string {
+  if (j.postedAt) return `Posted ${ago(j.postedAt, now)}`;
+  if (j.updatedAt) return `Updated ${ago(j.updatedAt, now)}`;
+  return "Posting date not listed";
+}
+
+/** Newest first; postings with no date from the company sort last. */
+export function compareNewest(a: Job, b: Job): number {
+  const t = (j: Job) => Date.parse(j.postedAt ?? j.updatedAt ?? "") || 0;
+  return t(b) - t(a);
 }

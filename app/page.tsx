@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <main className="flex min-h-screen flex-col">
+      <main id="main" className="flex min-h-screen flex-col">
         <Hero />
         <ProductPreview />
         <HeroSearch />

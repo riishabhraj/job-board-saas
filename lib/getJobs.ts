@@ -1,8 +1,11 @@
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { fetchAshby } from "./ashby";
 import { companies, type Company } from "./companies";
 import { fetchGreenhouse } from "./greenhouse";
 import { fetchLever } from "./lever";
+import { compareNewest } from "./filters";
+import { safeUrl } from "./links";
 import { isTechRole } from "./normalize";
 import { jobs as sampleJobs, type Job } from "./jobs";
 
@@ -13,7 +16,11 @@ export interface JobsResult {
   jobs: Job[];
   /** false when the live fetch failed and sample data is shown instead. */
   live: boolean;
+  /** Companies that returned at least one technology role. */
   companyCount: number;
+  /** Technology roles found before the feed cap was applied. */
+  totalCount: number;
+  /** When the source boards were last fetched (not when this page rendered). */
   fetchedAt: string;
 }
 
@@ -40,7 +47,10 @@ async function loadLiveJobs(): Promise<JobsResult> {
       console.warn(`board skipped: ${ats}/${token}: ${r.reason?.message ?? r.reason}`);
       return;
     }
-    const jobs = r.value.filter((j) => isTechRole(j.title));
+    // Only roles with a usable application link are listed.
+    const jobs = r.value.filter(
+      (j) => isTechRole(j.title) && safeUrl(j.applyUrl) !== null,
+    );
     console.info(`board ok: ${ats}/${token}: ${jobs.length}/${r.value.length} tech roles`);
     if (jobs.length > 0) companyCount++;
     all.push(...jobs);
@@ -48,8 +58,14 @@ async function loadLiveJobs(): Promise<JobsResult> {
 
   if (all.length === 0) throw new Error("no jobs fetched from any board");
 
-  all.sort((a, b) => Date.parse(b.postedAt) - Date.parse(a.postedAt));
-  return { jobs: all.slice(0, MAX_JOBS), live: true, companyCount, fetchedAt };
+  all.sort(compareNewest);
+  return {
+    jobs: all.slice(0, MAX_JOBS),
+    live: true,
+    companyCount,
+    totalCount: all.length,
+    fetchedAt,
+  };
 }
 
 // Failures throw, so they are not cached and the next request retries.
@@ -57,16 +73,25 @@ const cachedLoad = unstable_cache(loadLiveJobs, ["live-jobs-v1"], {
   revalidate: REVALIDATE_SECONDS,
 });
 
-export async function getJobs(): Promise<JobsResult> {
+// Last good result seen by this server instance. If every source fails on a
+// refresh we keep serving it (its fetchedAt stays honest) before resorting to
+// examples.
+let lastGood: JobsResult | null = null;
+
+// React cache: the page and its metadata share one result per request.
+export const getJobs = cache(async (): Promise<JobsResult> => {
   try {
-    return await cachedLoad();
+    lastGood = await cachedLoad();
+    return lastGood;
   } catch (err) {
-    console.error("live jobs unavailable, using samples:", err);
+    console.error("live jobs unavailable:", err);
+    if (lastGood) return lastGood;
     return {
       jobs: sampleJobs,
       live: false,
       companyCount: 0,
+      totalCount: 0,
       fetchedAt: new Date().toISOString(),
     };
   }
-}
+});

@@ -55,6 +55,8 @@ export interface ParsedLocation {
   eligibility: string;
 }
 
+const PLACEHOLDER_PLACE = /^(?:in[- ]?office|office|on[- ]?site|onsite|multiple locations?|various|n\/a|tbd)$/i;
+
 export function parseLocation(raw: string): ParsedLocation {
   const text = raw.trim();
   const hybrid = /hybrid/i.test(text);
@@ -77,12 +79,16 @@ export function parseLocation(raw: string): ParsedLocation {
     };
   }
 
-  const place = text
-    .replace(/\(?\bhybrid\b\)?/gi, "")
+  const onSite = /on[- ]?site|in[- ]office/i.test(text);
+  const cleaned = text
+    .replace(/\(?\b(?:hybrid|on[- ]?site)\b\)?/gi, "")
     .replace(/^[\s,;:/|–—-]+|[\s,;:/|–—-]+$/g, "")
     .trim();
+  const place = PLACEHOLDER_PLACE.test(cleaned) ? "" : cleaned;
   return {
-    workArrangement: hybrid ? "hybrid" : "on-site",
+    // A bare place name ("Austin, TX") does not say how the role is worked,
+    // so it is only called on-site when the posting says so.
+    workArrangement: hybrid ? "hybrid" : onSite ? "on-site" : "unspecified",
     city: place || undefined,
     eligibility: place || "Unspecified",
   };
@@ -180,6 +186,8 @@ export interface RawPosting {
   title: string;
   url: string;
   postedAt?: string;
+  /** When the company last edited the posting, if it says. */
+  updatedAt?: string;
   /** Location string as the company wrote it. */
   location: string;
   /** Workplace type when the ATS states it explicitly. */
@@ -197,6 +205,9 @@ function locationString(p: RawPosting): string {
   }
   if (p.workplace === "hybrid" && !/hybrid/i.test(p.location)) {
     return `${p.location} (Hybrid)`;
+  }
+  if (p.workplace === "on-site" && !/on[- ]?site/i.test(p.location)) {
+    return `${p.location} (On-site)`;
   }
   return p.location;
 }
@@ -229,7 +240,8 @@ export function toJob(company: Company, p: RawPosting, checkedAt: string): Job {
     maxYears: years ? years[1] : null,
     employmentType: employmentType(p.title, p.text, p.employment),
     skills: extractSkills(p.title, p.text),
-    postedAt: p.postedAt ?? checkedAt,
+    postedAt: p.postedAt ?? null,
+    updatedAt: p.updatedAt ?? null,
     source: SOURCE_LABEL[company.ats],
     lastVerifiedAt: checkedAt,
     applyUrl: p.url,

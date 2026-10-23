@@ -1,4 +1,5 @@
-export type WorkArrangement = "remote" | "hybrid" | "on-site";
+/** "unspecified" when the posting gives a place but not how the role is worked. */
+export type WorkArrangement = "remote" | "hybrid" | "on-site" | "unspecified";
 export type EmploymentType =
   | "Full-time"
   | "Part-time"
@@ -30,11 +31,15 @@ export interface Job {
   maxYears: number | null;
   employmentType: EmploymentType;
   skills: string[];
-  /** ISO timestamp the company published the opening (or we first saw it). */
-  postedAt: string;
+  /** ISO timestamp the company says it published the opening, if it says. */
+  postedAt: string | null;
+  /** ISO timestamp the company last edited the posting, if it says. */
+  updatedAt: string | null;
   /** Where the opening was found. */
   source: JobSource;
-  /** ISO timestamp of the last successful check against the original source. */
+  /** True for the built-in sample jobs, which are not real openings. */
+  isExample?: boolean;
+  /** ISO timestamp the source was last fetched (feed cache is ~15 minutes). */
   lastVerifiedAt: string;
   /** Original application URL at the company's own site / ATS. */
   applyUrl: string;
@@ -44,7 +49,8 @@ const minutesAgo = (m: number) =>
   new Date(Date.now() - m * 60 * 1000).toISOString();
 const hoursAgo = (h: number) => minutesAgo(h * 60);
 
-// Sample data until the ingestion pipeline and database exist.
+// Fallback examples shown only when no live source can be reached. They are
+// not real openings and the UI labels them as such.
 export const jobs: Job[] = [
   {
     id: "northstar-frontend-engineer",
@@ -57,6 +63,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["React", "TypeScript"],
     postedAt: hoursAgo(2),
+    updatedAt: null,
+    isExample: true,
     source: "Greenhouse",
     lastVerifiedAt: minutesAgo(17),
     applyUrl: "https://example.com/northstar/careers/frontend-engineer",
@@ -73,6 +81,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["Figma", "Product design"],
     postedAt: hoursAgo(4),
+    updatedAt: null,
+    isExample: true,
     source: "Ashby",
     lastVerifiedAt: minutesAgo(28),
     applyUrl: "https://example.com/forma/careers/product-designer",
@@ -88,6 +98,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["Node.js", "PostgreSQL"],
     postedAt: hoursAgo(6),
+    updatedAt: null,
+    isExample: true,
     source: "Lever",
     lastVerifiedAt: minutesAgo(41),
     applyUrl: "https://example.com/arcwell/careers/backend-engineer",
@@ -104,6 +116,8 @@ export const jobs: Job[] = [
     employmentType: "Full-time",
     skills: ["React", "Python"],
     postedAt: hoursAgo(8),
+    updatedAt: null,
+    isExample: true,
     source: "Company careers",
     lastVerifiedAt: minutesAgo(95),
     applyUrl: "https://example.com/plainfield/careers/full-stack-developer",
