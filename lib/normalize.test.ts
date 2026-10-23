@@ -127,12 +127,12 @@ describe("skills and text", () => {
 
 describe("isTechRole", () => {
   it("keeps engineering, design and data roles", () => {
-    for (const t of ["Senior Software Engineer", "Product Designer", "Data Scientist", "Staff SRE", "Technical Support Engineer", "Solutions Engineer", "Developer Advocate"]) {
+    for (const t of ["Senior Software Engineer", "Product Designer", "Data Scientist", "Data Center Software Engineer", "Staff SRE", "Technical Support Engineer", "Solutions Engineer", "Developer Advocate"]) {
       assert.ok(isTechRole(t), t);
     }
   });
   it("drops sales, recruiting and non-engineering 'technical' roles", () => {
-    for (const t of ["Account Executive", "Technical Recruiter", "Marketing Manager", "Program Manager, Commercial Solutions"]) {
+    for (const t of ["Account Executive", "Technical Recruiter", "Marketing Manager", "Program Manager, Commercial Solutions", "Data Center Facility Operations Lead - Commissioning & Delivery", "Construction Project Manager, Data Centers"]) {
       assert.ok(!isTechRole(t), t);
     }
   });
