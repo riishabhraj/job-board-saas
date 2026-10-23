@@ -15,7 +15,7 @@ export function ListHeader() {
       <span>Role</span>
       <span className="text-accent">Can I work here?</span>
       <span>Experience</span>
-      <span className="text-right">Posted · source</span>
+      <span className="text-right">Posted</span>
     </div>
   );
 }

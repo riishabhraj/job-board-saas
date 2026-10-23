@@ -129,3 +129,21 @@ export function compareNewest(a: Job, b: Job): number {
   const t = (j: Job) => Date.parse(j.postedAt ?? j.updatedAt ?? "") || 0;
   return t(b) - t(a);
 }
+
+/**
+ * A few of the newest real listings for the landing page: one per company
+ * (so it does not look like one board), and only ones whose location and
+ * posting date are known, so the preview shows the product at its clearest.
+ */
+export function pickHighlights(jobs: Job[], n: number): Job[] {
+  const seen = new Set<string>();
+  const picks: Job[] = [];
+  for (const j of [...jobs].sort(compareNewest)) {
+    if (picks.length === n) break;
+    if (j.isExample || !j.postedAt) continue;
+    if (j.eligibility === "Unspecified" || seen.has(j.company)) continue;
+    seen.add(j.company);
+    picks.push(j);
+  }
+  return picks;
+}

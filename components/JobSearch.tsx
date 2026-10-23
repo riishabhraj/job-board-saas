@@ -205,7 +205,7 @@ export function JobSearch({
         <p className="text-[13px] text-muted" aria-live="polite">
           {live ? (
             <>
-              Showing {scope} from {boards}. Source data refreshed{" "}
+              Showing {scope} from {boards}. Updated{" "}
               {ago(fetchedAt, now)}.
               {filtered && (
                 <>

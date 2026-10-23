@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
-import { compareNewest, dateLabel, eligibilityLabel, experienceLabel } from "./filters";
+import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, pickHighlights } from "./filters";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
 import type { Job } from "./jobs";
 import { normalizeLever } from "./lever";
@@ -205,5 +205,28 @@ describe("safeUrl", () => {
     for (const bad of ["", "  ", "javascript:alert(1)", "data:text/html,x", "/relative", "not a url", undefined, null]) {
       assert.equal(safeUrl(bad as string | undefined | null), null, String(bad));
     }
+  });
+});
+
+describe("pickHighlights", () => {
+  const j = (id: string, company: string, over: Partial<Job> = {}): Job => ({
+    id, company, title: "Engineer", workArrangement: "remote", eligibility: "India",
+    minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: "2026-10-20T00:00:00Z", updatedAt: null, source: "Greenhouse",
+    lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+
+  it("takes the newest, one per company, skipping unknowns and examples", () => {
+    const picks = pickHighlights([
+      j("old", "A", { postedAt: "2026-10-01T00:00:00Z" }),
+      j("a2", "A", { postedAt: "2026-10-22T00:00:00Z" }),
+      j("a1", "A", { postedAt: "2026-10-23T00:00:00Z" }),
+      j("b", "B", { postedAt: "2026-10-21T00:00:00Z" }),
+      j("nodate", "C", { postedAt: null }),
+      j("noloc", "D", { eligibility: "Unspecified" }),
+      j("ex", "E", { isExample: true }),
+    ], 4);
+    assert.deepEqual(picks.map((p) => p.id), ["a1", "b", "old"].filter((id) => id !== "old"));
+    assert.equal(pickHighlights([], 4).length, 0);
   });
 });

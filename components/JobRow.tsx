@@ -1,3 +1,5 @@
+"use client";
+
 import { buttonClass } from "./Button";
 import {
   ago,
@@ -42,7 +44,6 @@ export function JobRow({ job, now }: { job: Job; now: number }) {
           ) : (
             <>
               <p className="text-text">{dateLabel(job, now)}</p>
-              <p>Source: {job.source}</p>
               <p>Active at last check · {ago(job.lastVerifiedAt, now)}</p>
             </>
           )}

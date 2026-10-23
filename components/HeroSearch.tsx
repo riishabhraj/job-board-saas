@@ -34,9 +34,6 @@ export function HeroSearch() {
             Search jobs
           </Button>
         </form>
-        <p className="text-[13px] text-faint">
-          Pulling from Greenhouse · Lever · Ashby company boards
-        </p>
       </div>
     </section>
   );
