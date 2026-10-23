@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "jobboard — Real jobs. Clear answers.";
+export const alt = "caniworkhere. — Real jobs. Clear answers.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -19,9 +19,8 @@ export default function OpengraphImage() {
           color: "#f2f2f4",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 36, fontWeight: 700 }}>
-          <div style={{ width: 16, height: 16, borderRadius: 8, background: "#7c9cff" }} />
-          jobboard
+        <div style={{ display: "flex", fontSize: 64, fontWeight: 800, letterSpacing: -2 }}>
+          caniworkhere<span style={{ color: "#7c9cff" }}>.</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 84, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2 }}>

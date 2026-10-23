@@ -7,7 +7,7 @@ import { Navbar } from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "jobboard lists technology jobs taken directly from company career boards, with clear location, experience and freshness, and links to the original application.",
+    "caniworkhere lists technology jobs taken directly from company career boards, with clear location, experience and freshness, and links to the original application.",
 };
 
 export default function About() {
@@ -21,7 +21,7 @@ export default function About() {
               Not another recycled job board.
             </h1>
             <p className="text-[17px] leading-[1.6] text-muted">
-              jobboard lists openings taken directly from company career boards,
+              caniworkhere lists openings taken directly from company career boards,
               shows where each role can be worked from and when it was posted,
               and sends you to the company&apos;s own application page. No Easy
               Apply, no copies of copies.

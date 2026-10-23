@@ -5,7 +5,7 @@ const faqs = [
   ],
   [
     "Why not just use LinkedIn or Indeed?",
-    "Those boards often show copies or reposts of a company’s original posting, which can be out of date. jobboard loads each posting from the company’s own career board and links straight to the page the company published. We aren’t a replacement for those sites — we cover a smaller, curated set of companies.",
+    "Those boards often show copies or reposts of a company’s original posting, which can be out of date. caniworkhere loads each posting from the company’s own career board and links straight to the page the company published. We aren’t a replacement for those sites — we cover a smaller, curated set of companies.",
   ],
   [
     "How do you know a job is still open?",

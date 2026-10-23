@@ -6,7 +6,7 @@ import { contactEmail } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy",
-  description: "What jobboard does and does not collect.",
+  description: "What caniworkhere does and does not collect.",
 };
 
 const h2 = "text-xl font-semibold";
@@ -22,7 +22,7 @@ export default function Privacy() {
             Privacy
           </h1>
           <p className={p}>
-            jobboard is an early-stage project. This page says plainly what
+            caniworkhere is an early-stage project. This page says plainly what
             the site does and doesn&apos;t collect. Last updated October 2026.
           </p>
 

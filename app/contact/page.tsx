@@ -6,7 +6,7 @@ import { contactEmail } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with jobboard.",
+  description: "Get in touch with caniworkhere.",
 };
 
 export default function Contact() {

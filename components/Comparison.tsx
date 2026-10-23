@@ -43,7 +43,7 @@ export function Comparison() {
             <div className="grid grid-cols-[1.1fr_1fr_1fr] border-b border-border bg-surface-2 p-[16px_20px] text-xs font-bold tracking-[0.05em] uppercase">
               <p className="text-faint">Feature</p>
               <p className="text-faint">LinkedIn / Indeed</p>
-              <p className="text-accent">jobboard</p>
+              <p className="text-accent">caniworkhere</p>
             </div>
             {rows.map(([feature, others, us]) => (
               <div
