@@ -38,7 +38,7 @@ export default function Privacy() {
             We use Vercel Web Analytics to see how the site is used. It
             records page views and a few events — the search terms you submit,
             which filters you use, and which job&apos;s “View role” button you
-            click (company name and source). It does not use cookies or build
+            click (the company name). It does not use cookies or build
             a profile of you, and we don&apos;t combine it with anything that
             identifies you.
           </p>
@@ -50,13 +50,12 @@ export default function Privacy() {
             the service secure.
           </p>
 
-          <h2 className={h2}>Where jobs come from</h2>
+          <h2 className={h2}>Job links</h2>
           <p className={p}>
-            Listings are loaded from the public job boards companies publish
-            on Greenhouse, Lever and Ashby. “View role” opens the company&apos;s
-            own page in a new tab; that site and its application system have
-            their own privacy practices, which we don&apos;t control. We
-            don&apos;t receive or store your applications.
+            “View role” opens the company&apos;s own page in a new tab. That
+            site and its application system have their own privacy practices,
+            which we don&apos;t control. We don&apos;t receive or store your
+            applications.
           </p>
 
           {contactEmail && (

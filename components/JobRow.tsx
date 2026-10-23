@@ -54,10 +54,7 @@ export function JobRow({ job, now }: { job: Job; now: number }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() =>
-              trackEvent("view_role_clicked", {
-                company: job.company,
-                source: job.source,
-              })
+              trackEvent("view_role_clicked", { company: job.company })
             }
             className={buttonClass("secondary")}
           >

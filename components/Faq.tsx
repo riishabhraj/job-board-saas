@@ -17,7 +17,7 @@ const faqs = [
   ],
   [
     "Which jobs and companies do you cover?",
-    "We currently pull technology roles, picked by job title, from a curated list of companies that publish on Greenhouse, Lever and Ashby, and show the newest few hundred. That’s a slice of what’s open, not everything. We add companies over time.",
+    "We currently pull technology roles, picked by job title, from a curated list of companies, and show the newest few hundred. That’s a slice of what’s open, not everything. We add companies over time.",
   ],
   [
     "Do I need an account to browse?",

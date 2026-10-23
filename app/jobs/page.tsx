@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Jobs",
     description:
-      "Search technology openings pulled directly from company career boards on Greenhouse, Lever and Ashby.",
+      "Search technology openings pulled directly from company career boards.",
     // Never let example data from an outage be indexed.
     robots: live ? undefined : { index: false },
   };
