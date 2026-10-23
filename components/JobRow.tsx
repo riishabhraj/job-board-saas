@@ -6,6 +6,7 @@ import {
   experienceLabel,
 } from "@/lib/filters";
 import type { Job } from "@/lib/jobs";
+import { LIST_COLUMNS } from "./ListHeader";
 import { trackEvent } from "@/lib/analytics";
 import { safeUrl } from "@/lib/links";
 
@@ -13,16 +14,21 @@ export function JobRow({ job, now }: { job: Job; now: number }) {
   const href = job.isExample ? null : safeUrl(job.applyUrl);
 
   return (
-    <li className="grid gap-x-4 gap-y-3 bg-surface p-5 not-first:border-t not-first:border-border md:grid-cols-[1.3fr_1fr_1fr_280px] md:items-center">
+    <li className={`grid gap-x-4 gap-y-3 bg-surface p-5 not-first:border-t not-first:border-border md:items-center ${LIST_COLUMNS}`}>
       <div className="flex min-w-0 flex-col gap-1">
         <p className="text-[13px] break-words text-muted">{job.company}</p>
         <h3 className="text-lg leading-snug font-semibold break-words">
           {job.title}
         </h3>
       </div>
-      <p className="min-w-0 text-[13px] break-words text-text">
-        {eligibilityLabel(job)}
-      </p>
+      <div className="min-w-0">
+        <p className="mb-0.5 text-[11px] font-semibold tracking-[0.06em] text-faint uppercase md:hidden">
+          Can I work here?
+        </p>
+        <p className="text-[13px] break-words text-text">
+          {eligibilityLabel(job)}
+        </p>
+      </div>
       <div className="flex min-w-0 flex-col gap-1 text-[13px] break-words text-muted">
         <p>
           {experienceLabel(job)} · {job.employmentType}

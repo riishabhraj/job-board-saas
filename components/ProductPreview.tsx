@@ -35,10 +35,17 @@ export function ProductPreview() {
         <p className="mb-3.5 text-center text-xs font-semibold tracking-[0.06em] text-faint uppercase">
           Example listings — the format, not real openings
         </p>
-        <ul
-          aria-label="Example listings, not real openings"
-          className="overflow-hidden rounded-[14px] border border-border bg-surface"
+        <div className="overflow-hidden rounded-[14px] border border-border bg-surface">
+        <div
+          aria-hidden
+          className="hidden grid-cols-[1.4fr_1fr_1fr_250px] gap-x-4 border-b border-border bg-surface-2 px-5 py-2.5 text-[11px] font-semibold tracking-[0.06em] text-faint uppercase min-[721px]:grid"
         >
+          <span>Role</span>
+          <span className="text-accent">Can I work here?</span>
+          <span>Experience</span>
+          <span className="text-right">Posted · source</span>
+        </div>
+        <ul aria-label="Example listings, not real openings">
           {exampleRows.map((c) => (
             <li
               key={c.role}
@@ -53,7 +60,12 @@ export function ProductPreview() {
                   </span>
                 </p>
               </div>
-              <p className="text-[13px] text-[#c7c7cc]">{c.remote}</p>
+              <div>
+                <p className="mb-0.5 text-[11px] font-semibold tracking-[0.06em] text-faint uppercase min-[721px]:hidden">
+                  Can I work here?
+                </p>
+                <p className="text-[13px] text-[#c7c7cc]">{c.remote}</p>
+              </div>
               <p className="text-[13px] text-dim">{c.meta}</p>
               <div className="flex flex-col gap-1 min-[721px]:items-end min-[721px]:text-right">
                 <p className="text-xs font-semibold text-accent">{c.date}</p>
@@ -62,6 +74,7 @@ export function ProductPreview() {
             </li>
           ))}
         </ul>
+        </div>
         <p className="mt-4 text-center text-[13px] text-faint">
           Real listings are on the{" "}
           <Link

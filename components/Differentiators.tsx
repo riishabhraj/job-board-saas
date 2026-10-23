@@ -1,6 +1,6 @@
 const items = [
   {
-    title: "Eligibility, spelled out",
+    title: "Can I work here? Answered up front",
     desc: "Where you can work from, as the posting states it — Remote — Worldwide, Remote — India eligible, or a city — before you open the listing.",
   },
   {

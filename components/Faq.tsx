@@ -1,5 +1,9 @@
 const faqs = [
   [
+    "What does “Can I work here?” mean?",
+    "Each listing shows where the posting says the role can be worked from — for example Remote — India eligible, or a city. It’s what the company published, not advice about visas or work authorization. If a posting doesn’t say, we say so, and you should check the company’s page.",
+  ],
+  [
     "Why not just use LinkedIn or Indeed?",
     "Those boards often show copies or reposts of a company’s original posting, which can be out of date. jobboard loads each posting from the company’s own career board and links straight to the page the company published. We aren’t a replacement for those sites — we cover a smaller, curated set of companies.",
   ],

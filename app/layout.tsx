@@ -12,19 +12,19 @@ const description =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "jobboard — Tech jobs, straight from the source",
+    default: "jobboard — Real jobs. Clear answers.",
     template: "%s — jobboard",
   },
   description,
   openGraph: {
     type: "website",
     siteName: "jobboard",
-    title: "jobboard — Tech jobs, straight from the source",
+    title: "jobboard — Real jobs. Clear answers.",
     description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "jobboard — Tech jobs, straight from the source",
+    title: "jobboard — Real jobs. Clear answers.",
     description,
   },
 };

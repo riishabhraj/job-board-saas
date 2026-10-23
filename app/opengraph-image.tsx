@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "jobboard — Tech jobs, straight from the source";
+export const alt = "jobboard — Real jobs. Clear answers.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -25,11 +25,11 @@ export default function OpengraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 84, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2 }}>
-            Every listing, straight from the source.
+            See where you can work from — before you apply.
           </div>
           <div style={{ fontSize: 34, color: "#9fa0a6" }}>
-            Tech jobs from company career boards — with clear location,
-            experience and freshness.
+            Real jobs. Clear answers. Tech jobs straight from company career
+            boards.
           </div>
         </div>
       </div>

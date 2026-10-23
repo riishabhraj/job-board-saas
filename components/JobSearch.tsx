@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "./Button";
 import { JobRow } from "./JobRow";
+import { ListHeader } from "./ListHeader";
 import {
   ago,
   arrangementLabels,
@@ -220,11 +221,14 @@ export function JobSearch({
           )}
         </p>
         {results.length > 0 ? (
-          <ul className="overflow-hidden rounded-control border border-border">
+          <div className="overflow-hidden rounded-control border border-border">
+            <ListHeader />
+            <ul>
             {results.slice(0, shown).map((job) => (
               <JobRow key={job.id} job={job} now={now} />
             ))}
-          </ul>
+            </ul>
+          </div>
         ) : (
           <div className="rounded-control border border-border bg-surface p-6 text-sm">
             <p className="font-semibold text-text">
