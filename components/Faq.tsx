@@ -9,7 +9,7 @@ const faqs = [
   ],
   [
     "Do I need an account to browse?",
-    "No. Search, filter, and open any listing without signing up. An account is only needed for saved searches or alerts.",
+    "No. Search, filter, and open any listing without signing up.",
   ],
   [
     "Is it free for candidates?",

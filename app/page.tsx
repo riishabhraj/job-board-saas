@@ -1,4 +1,3 @@
-import { AlertSignup } from "@/components/AlertSignup";
 import { Comparison } from "@/components/Comparison";
 import { Differentiators } from "@/components/Differentiators";
 import { Faq } from "@/components/Faq";
@@ -19,7 +18,6 @@ export default function Home() {
         <Differentiators />
         <Comparison />
         <Faq />
-        <AlertSignup />
       </main>
       <Footer />
     </>

@@ -11,18 +11,6 @@ export function Navbar() {
         <nav className="flex flex-wrap items-center gap-7">
           <Link
             href="/jobs"
-            className="text-sm whitespace-nowrap text-muted transition-colors hover:text-text"
-          >
-            Browse jobs
-          </Link>
-          <Link
-            href="/#alerts"
-            className="text-sm whitespace-nowrap text-muted transition-colors hover:text-text"
-          >
-            Get job alerts
-          </Link>
-          <Link
-            href="/jobs"
             className={`${buttonClass("light")} !h-auto rounded-[7px] px-[18px] py-[9px]`}
           >
             Browse jobs ↗
