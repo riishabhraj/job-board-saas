@@ -1,9 +1,12 @@
 import { unstable_cache } from "next/cache";
-import { companies } from "./companies";
-import { fetchBoard, isTechRole, normalize } from "./greenhouse";
+import { fetchAshby } from "./ashby";
+import { companies, type Company } from "./companies";
+import { fetchGreenhouse } from "./greenhouse";
+import { fetchLever } from "./lever";
+import { isTechRole } from "./normalize";
 import { jobs as sampleJobs, type Job } from "./jobs";
 
-const MAX_JOBS = 400;
+const MAX_JOBS = 600;
 const REVALIDATE_SECONDS = 15 * 60;
 
 export interface JobsResult {
@@ -14,28 +17,34 @@ export interface JobsResult {
   fetchedAt: string;
 }
 
+const FETCHERS: Record<
+  Company["ats"],
+  (company: Company, checkedAt: string) => Promise<Job[]>
+> = {
+  greenhouse: fetchGreenhouse,
+  lever: fetchLever,
+  ashby: fetchAshby,
+};
+
 async function loadLiveJobs(): Promise<JobsResult> {
   const fetchedAt = new Date().toISOString();
   const settled = await Promise.allSettled(
-    companies.map(async (company) => ({
-      company,
-      raw: await fetchBoard(company.token),
-    })),
+    companies.map((company) => FETCHERS[company.ats](company, fetchedAt)),
   );
 
   const all: Job[] = [];
   let companyCount = 0;
-  for (const r of settled) {
+  settled.forEach((r, i) => {
+    const { ats, token } = companies[i];
     if (r.status === "rejected") {
-      console.warn("board skipped:", r.reason?.message ?? r.reason);
-      continue;
+      console.warn(`board skipped: ${ats}/${token}: ${r.reason?.message ?? r.reason}`);
+      return;
     }
-    const jobs = r.value.raw
-      .filter((j) => isTechRole(j.title))
-      .map((j) => normalize(r.value.company, j, fetchedAt));
+    const jobs = r.value.filter((j) => isTechRole(j.title));
+    console.info(`board ok: ${ats}/${token}: ${jobs.length}/${r.value.length} tech roles`);
     if (jobs.length > 0) companyCount++;
     all.push(...jobs);
-  }
+  });
 
   if (all.length === 0) throw new Error("no jobs fetched from any board");
 
