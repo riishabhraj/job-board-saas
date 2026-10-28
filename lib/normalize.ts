@@ -1,4 +1,5 @@
 import type { Company } from "./companies";
+import { locationCountries, regionCountries } from "./geo";
 import type { EmploymentType, Job, JobSource, WorkArrangement } from "./jobs";
 
 // ---- text helpers -------------------------------------------------------
@@ -228,6 +229,8 @@ function employmentType(
 export function toJob(company: Company, p: RawPosting, checkedAt: string): Job {
   const loc = parseLocation(locationString(p));
   const years = extractYears(p.text);
+  let countries = locationCountries(p.location);
+  if (countries.length === 0) countries = regionCountries(loc.eligibility);
 
   return {
     id: `${company.ats}-${company.token}-${p.id}`,
@@ -236,6 +239,7 @@ export function toJob(company: Company, p: RawPosting, checkedAt: string): Job {
     city: loc.city,
     workArrangement: loc.workArrangement,
     eligibility: loc.eligibility,
+    countries,
     minYears: years ? years[0] : null,
     maxYears: years ? years[1] : null,
     employmentType: employmentType(p.title, p.text, p.employment),

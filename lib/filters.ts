@@ -37,23 +37,21 @@ export const emptyFilters: Filters = {
   experience: "",
 };
 
-/**
- * Locations offered in the filter: the most common eligibility values,
- * excluding Worldwide (always matched) and Unspecified.
- */
-export function locationOptions(jobs: Job[], limit = 15): string[] {
+export interface LocationOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+/** Every country that appears in the feed, most jobs first. */
+export function locationOptions(jobs: Job[]): LocationOption[] {
   const counts = new Map<string, number>();
   for (const j of jobs) {
-    if (j.eligibility === "Worldwide" || j.eligibility === "Unspecified") {
-      continue;
-    }
-    counts.set(j.eligibility, (counts.get(j.eligibility) ?? 0) + 1);
+    for (const c of j.countries) counts.set(c, (counts.get(c) ?? 0) + 1);
   }
   return [...counts]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, limit)
-    .map(([name]) => name)
-    .sort();
+    .map(([value, count]) => ({ value, label: value, count }));
 }
 
 export function filterJobs(jobs: Job[], f: Filters): Job[] {
@@ -70,7 +68,7 @@ export function filterJobs(jobs: Job[], f: Filters): Job[] {
     if (f.location) {
       // Worldwide-remote roles are open to candidates anywhere.
       const open = j.workArrangement === "remote" && j.eligibility === "Worldwide";
-      if (!open && j.eligibility !== f.location) return false;
+      if (!open && !j.countries.includes(f.location)) return false;
     }
     if (f.arrangement && j.workArrangement !== f.arrangement) return false;
     if (bucket) {

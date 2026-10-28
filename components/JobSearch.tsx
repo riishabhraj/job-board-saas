@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Button } from "./Button";
 import { JobRow } from "./JobRow";
 import { ListHeader } from "./ListHeader";
+import { LocationCombobox } from "./ui/LocationCombobox";
+import { Select } from "./ui/Select";
 import {
   ago,
   arrangementLabels,
@@ -18,44 +20,6 @@ import type { Job } from "@/lib/jobs";
 import { cleanTerm, trackEvent } from "@/lib/analytics";
 
 const PAGE_SIZE = 50;
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <label className="relative inline-flex max-w-full">
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`h-[45px] max-w-full min-w-0 cursor-pointer appearance-none truncate rounded-control border bg-surface py-3 pr-10 pl-3 text-[13px] hover:border-muted ${
-          value ? "border-accent text-text" : "border-border text-text"
-        }`}
-      >
-        <option value="">{label}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-3 right-3 text-[13px] text-muted"
-      >
-        ⌄
-      </span>
-    </label>
-  );
-}
 
 export function JobSearch({
   jobs,
@@ -143,13 +107,13 @@ export function JobSearch({
           </Button>
         </form>
         <div className="flex flex-wrap items-center gap-2">
-          <FilterSelect
+          <LocationCombobox
             label="All locations"
             value={filters.location}
             onChange={setFilter("location")}
-            options={locations.map((l) => ({ value: l, label: l }))}
+            options={locations}
           />
-          <FilterSelect
+          <Select
             label="Work arrangement"
             value={filters.arrangement}
             onChange={setFilter("arrangement")}
@@ -158,7 +122,7 @@ export function JobSearch({
               label,
             }))}
           />
-          <FilterSelect
+          <Select
             label="Experience"
             value={filters.experience}
             onChange={setFilter("experience")}

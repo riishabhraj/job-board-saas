@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
-import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, pickHighlights } from "./filters";
+import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights } from "./filters";
+import { locationCountries, regionCountries } from "./geo";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
 import type { Job } from "./jobs";
 import { normalizeLever } from "./lever";
@@ -57,7 +58,7 @@ describe("parseLocation", () => {
 describe("eligibilityLabel", () => {
   const job = (over: Partial<Job>): Job => ({
     id: "1", company: "A", title: "T", workArrangement: "unspecified",
-    eligibility: "Unspecified", minYears: null, maxYears: null,
+    eligibility: "Unspecified", countries: [], minYears: null, maxYears: null,
     employmentType: "Full-time", skills: [], postedAt: null, updatedAt: null,
     source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test",
     ...over,
@@ -210,7 +211,7 @@ describe("safeUrl", () => {
 
 describe("pickHighlights", () => {
   const j = (id: string, company: string, over: Partial<Job> = {}): Job => ({
-    id, company, title: "Engineer", workArrangement: "remote", eligibility: "India",
+    id, company, title: "Engineer", workArrangement: "remote", eligibility: "India", countries: ["India"],
     minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
     postedAt: "2026-10-20T00:00:00Z", updatedAt: null, source: "Greenhouse",
     lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
@@ -228,5 +229,70 @@ describe("pickHighlights", () => {
     ], 4);
     assert.deepEqual(picks.map((p) => p.id), ["a1", "b", "old"].filter((id) => id !== "old"));
     assert.equal(pickHighlights([], 4).length, 0);
+  });
+});
+
+describe("locationCountries (real strings from the feed)", () => {
+  const cases: [string, string[]][] = [
+    ["Bengaluru, India", ["India"]],
+    ["Bangalore, India", ["India"]],
+    ["Bangalore", ["India"]],
+    ["Hyderabad", ["India"]],
+    ["Gurugram, India", ["India"]],
+    ["Remote - India", ["India"]],
+    ["San Francisco, CA | New York City, NY", ["United States"]],
+    ["San Francisco, CA • New York, NY • United States", ["United States"]],
+    ["Chicago, Illinois; San Francisco, California; Seattle, Washington", ["United States"]],
+    ["London", ["United Kingdom"]],
+    ["London, United Kingdom", ["United Kingdom"]],
+    ["Toronto, Ontario, Canada", ["Canada"]],
+    ["Toronto, ON", ["Canada"]],
+    ["Alberta; British Columbia; Ontario; Quebec", ["Canada"]],
+    ["(U.S.)", ["United States"]],
+    ["San Francisco Bay Area", ["United States"]],
+    ["Luxembourg", ["Luxembourg"]],
+  ];
+  for (const [text, want] of cases) {
+    it(`${text} -> ${want.join(", ")}`, () => assert.deepEqual(locationCountries(text).sort(), want));
+  }
+
+  it("keeps several countries when a posting lists several", () => {
+    assert.deepEqual(locationCountries("London | Berlin | Toronto").sort(), ["Canada", "Germany", "United Kingdom"]);
+  });
+  it("expands regions and 'or'", () => {
+    const eu = locationCountries("Europe or US");
+    assert.ok(eu.includes("Germany") && eu.includes("United States"));
+    assert.deepEqual(locationCountries("NAMER").sort(), ["Canada", "United States"]);
+    assert.ok(regionCountries("APAC").includes("India"));
+  });
+  it("returns nothing when no place is named", () => {
+    assert.deepEqual(locationCountries(""), []);
+    assert.deepEqual(locationCountries("Distributed"), []);
+    assert.deepEqual(locationCountries("Remote"), []);
+  });
+});
+
+describe("location filter and options", () => {
+  const j = (id: string, over: Partial<Job>): Job => ({
+    id, company: "A", title: "Engineer", workArrangement: "unspecified", eligibility: "Unspecified",
+    countries: [], minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: null, updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+  const jobs = [
+    j("blr", { city: "Bangalore", countries: ["India"] }),
+    j("blr2", { city: "Bengaluru, India", countries: ["India"] }),
+    j("sf", { city: "San Francisco", countries: ["United States"] }),
+    j("world", { workArrangement: "remote", eligibility: "Worldwide" }),
+    j("remote-us", { workArrangement: "remote", eligibility: "United States", countries: ["United States"] }),
+    j("unknown", {}),
+  ];
+  it("lists every country with counts, most jobs first", () => {
+    const o = locationOptions(jobs);
+    assert.deepEqual(o.map((x) => [x.value, x.count]), [["India", 2], ["United States", 2]]);
+  });
+  it("matches by country, including worldwide-remote, and never mixes countries", () => {
+    const ids = (country: string) => filterJobs(jobs, { ...emptyFilters, location: country }).map((x) => x.id).sort();
+    assert.deepEqual(ids("India"), ["blr", "blr2", "world"]);
+    assert.deepEqual(ids("United States"), ["remote-us", "sf", "world"]);
   });
 });

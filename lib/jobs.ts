@@ -26,6 +26,8 @@ export interface Job {
    */
   eligibility: string;
   /** Years of experience asked for; null when the posting does not say. */
+  /** Countries the posting covers, derived from its location text. */
+  countries: string[];
   minYears: number | null;
   /** null with a non-null minYears means open-ended ("5+ years"). */
   maxYears: number | null;
@@ -58,6 +60,7 @@ export const jobs: Job[] = [
     title: "Frontend Engineer",
     workArrangement: "remote",
     eligibility: "India",
+    countries: ["India"],
     minYears: 2,
     maxYears: 4,
     employmentType: "Full-time",
@@ -76,6 +79,7 @@ export const jobs: Job[] = [
     city: "Bengaluru",
     workArrangement: "hybrid",
     eligibility: "India",
+    countries: ["India"],
     minYears: 3,
     maxYears: 5,
     employmentType: "Full-time",
@@ -93,6 +97,7 @@ export const jobs: Job[] = [
     title: "Backend Engineer",
     workArrangement: "remote",
     eligibility: "Worldwide",
+    countries: [],
     minYears: 3,
     maxYears: 6,
     employmentType: "Full-time",
@@ -111,6 +116,7 @@ export const jobs: Job[] = [
     city: "Pune",
     workArrangement: "on-site",
     eligibility: "India",
+    countries: ["India"],
     minYears: 1,
     maxYears: 3,
     employmentType: "Full-time",
