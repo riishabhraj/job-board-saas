@@ -35,12 +35,15 @@ export default function Privacy() {
 
           <h2 className={h2}>Analytics</h2>
           <p className={p}>
-            We use Vercel Web Analytics to see how the site is used. It
-            records page views and a few events — the search terms you submit,
-            which filters you use, and which job&apos;s “View role” button you
-            click (the company name). It does not use cookies or build
-            a profile of you, and we don&apos;t combine it with anything that
-            identifies you.
+            We use Vercel Web Analytics and PostHog to see how the site is
+            used. They record page views and a few events — the search terms
+            you submit, which filters you use, and which job&apos;s “View role”
+            button you click (the company name). We don&apos;t use cookies,
+            record your screen or build a profile of you. PostHog keeps a
+            random ID in your browser&apos;s local storage so we can tell
+            repeat visits from new ones; clearing your site data removes it,
+            and we respect your browser&apos;s Do Not Track setting. We
+            don&apos;t combine this with anything that identifies you.
           </p>
 
           <h2 className={h2}>Hosting</h2>
