@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
-import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights } from "./filters";
+import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal } from "./filters";
 import { locationCountries, regionCountries } from "./geo";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
 import type { Job } from "./jobs";
@@ -294,5 +294,61 @@ describe("location filter and options", () => {
     const ids = (country: string) => filterJobs(jobs, { ...emptyFilters, location: country }).map((x) => x.id).sort();
     assert.deepEqual(ids("India"), ["blr", "blr2", "world"]);
     assert.deepEqual(ids("United States"), ["remote-us", "sf", "world"]);
+  });
+});
+
+describe("experience filter for postings that state no years", () => {
+  const j = (id: string, over: Partial<Job>): Job => ({
+    id, company: "A", title: "Software Engineer", workArrangement: "unspecified", eligibility: "Unspecified",
+    countries: [], minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: null, updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+
+  it("reads seniority from the title, senior first", () => {
+    assert.equal(seniorityFromTitle("Software Engineering Intern (Summer 2027)"), "entry");
+    assert.equal(seniorityFromTitle("Software Engineer - New Grad"), "entry");
+    assert.equal(seniorityFromTitle("Support Engineer I"), "entry");
+    assert.equal(seniorityFromTitle("SDE 1"), "entry");
+    assert.equal(seniorityFromTitle("Associate Product Manager"), "entry");
+    assert.equal(seniorityFromTitle("Senior Associate Engineer"), "senior");
+    assert.equal(seniorityFromTitle("Staff Software Engineer"), "senior");
+    assert.equal(seniorityFromTitle("Sr. Backend Engineer"), "senior");
+    assert.equal(seniorityFromTitle("Backend Engineer"), "unknown");
+  });
+  it("does not mistake internal/international/II for entry level", () => {
+    assert.equal(seniorityFromTitle("Backend Engineer, Internationalisation"), "unknown");
+    assert.equal(seniorityFromTitle("AI Engineer, Internal Tools"), "unknown");
+    assert.equal(seniorityFromTitle("Software Engineer II"), "unknown");
+  });
+  it("keeps unstated jobs in the buckets their title allows", () => {
+    const jobs = [
+      j("intern", { title: "Engineering Intern" }),
+      j("senior", { title: "Staff Engineer" }),
+      j("plain", { title: "Backend Engineer" }),
+      j("stated", { title: "Backend Engineer", minYears: 3, maxYears: 5 }),
+    ];
+    const ids = (experience: string) =>
+      filterJobs(jobs, { ...emptyFilters, experience }).map((x) => x.id).sort();
+    assert.deepEqual(ids("0-2"), ["intern", "plain"]);
+    assert.deepEqual(ids("3-5"), ["plain", "stated"]);
+    assert.deepEqual(ids("6+"), ["senior"]);
+  });
+  it("labels entry-level titles and ranks signalled roles first", () => {
+    assert.equal(experienceLabel(j("i", { title: "New Grad Engineer" })), "Entry level");
+    assert.equal(experienceLabel(j("p", {})), "Experience not stated");
+    assert.equal(hasExperienceSignal(j("i", { title: "Engineering Intern" })), true);
+    assert.equal(hasExperienceSignal(j("p", {})), false);
+  });
+  it("suggests which single filter would show more roles", () => {
+    const jobs = [
+      j("a", { countries: ["India"], workArrangement: "remote", minYears: 0, maxYears: 2 }),
+      j("b", { countries: ["India"], workArrangement: "remote", minYears: 3, maxYears: 5 }),
+      j("c", { countries: ["India"], workArrangement: "hybrid", minYears: 3, maxYears: 5 }),
+    ];
+    const f = { ...emptyFilters, location: "India", arrangement: "remote", experience: "0-2" };
+    // Only "a" matches. Dropping experience shows a+b; dropping Remote or
+    // India shows no more than "a", so those are not suggested.
+    assert.deepEqual(relaxations(jobs, f), [{ key: "experience", label: "0–2 years", count: 2 }]);
+    assert.deepEqual(relaxations(jobs, { ...emptyFilters, location: "India" }), []);
   });
 });

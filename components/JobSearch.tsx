@@ -13,7 +13,9 @@ import {
   emptyFilters,
   experienceBuckets,
   filterJobs,
+  hasExperienceSignal,
   locationOptions,
+  relaxations,
   type Filters,
 } from "@/lib/filters";
 import type { Job } from "@/lib/jobs";
@@ -46,12 +48,31 @@ export function JobSearch({
   const [shown, setShown] = useState(PAGE_SIZE);
 
   const results = useMemo(
-    () => filterJobs(jobs, filters).sort(compareNewest),
+    () =>
+      filterJobs(jobs, filters).sort((a, b) =>
+        // With an experience filter on, roles that point at that level come
+        // before ones that merely do not rule it out.
+        filters.experience
+          ? Number(hasExperienceSignal(b)) - Number(hasExperienceSignal(a)) ||
+            compareNewest(a, b)
+          : compareNewest(a, b),
+      ),
     [jobs, filters],
   );
   const locations = useMemo(() => locationOptions(jobs), [jobs]);
   const filtered =
     !!filters.query || !!filters.location || !!filters.arrangement || !!filters.experience;
+
+  // When few roles match, say which single filter would show more.
+  const thin = filtered && results.length < 5;
+  const relax = useMemo(
+    () => (thin ? relaxations(jobs, filters) : []),
+    [thin, jobs, filters],
+  );
+  const drop = (key: "query" | "location" | "arrangement" | "experience") => {
+    if (key === "query") setDraft("");
+    set({ [key]: "" });
+  };
 
   const set = (patch: Partial<Filters>) => {
     setShown(PAGE_SIZE);
@@ -184,6 +205,26 @@ export function JobSearch({
             "Example listings"
           )}
         </p>
+        {thin && relax.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+            <span>
+              {results.length === 0
+                ? "No matches."
+                : `Only ${results.length} ${results.length === 1 ? "match" : "matches"}.`}{" "}
+              See more by removing:
+            </span>
+            {relax.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => drop(r.key)}
+                className="rounded-control border border-border bg-surface-2 px-2.5 py-1 text-text transition-colors hover:border-accent"
+              >
+                {r.label} <span className="text-muted">→ {r.count} roles</span>
+              </button>
+            ))}
+          </div>
+        )}
         {results.length > 0 ? (
           <div className="overflow-hidden rounded-control border border-border">
             <ListHeader />
@@ -199,7 +240,8 @@ export function JobSearch({
               No openings match these filters.
             </p>
             <p className="mt-1 text-muted">
-              Try a broader search or fewer filters.
+              Try a broader search or fewer filters. We list technology roles
+              only — engineering, data, security, product and design.
             </p>
             {filtered && (
               <Button variant="secondary" className="mt-4" onClick={clear}>
