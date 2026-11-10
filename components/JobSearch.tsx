@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "./Button";
 import { JobRow } from "./JobRow";
 import { ListHeader } from "./ListHeader";
@@ -69,18 +69,8 @@ export function JobSearch({
   const [draft, setDraft] = useState("");
   const [shown, setShown] = useState(PAGE_SIZE);
 
-  // The text being typed filters live; Enter turns it into a tag.
-  const typing = useDeferredValue(draft.trim());
-  const effective = useMemo<Filters>(
-    () => ({
-      ...filters,
-      terms:
-        typing && !filters.terms.some((t) => t.toLowerCase() === typing.toLowerCase())
-          ? [...filters.terms, typing]
-          : filters.terms,
-    }),
-    [filters, typing],
-  );
+  // Typing does not touch the list: only a committed tag (Enter) filters.
+  const effective = filters;
 
   const results = useMemo(
     () =>
@@ -141,7 +131,6 @@ export function JobSearch({
   };
   const drop = (r: Relaxation) => {
     if (r.key === "terms") {
-      if (r.term === typing) setDraft("");
       removeTag(r.term ?? "");
     } else {
       setGroup(r.key)([]);
@@ -174,10 +163,7 @@ export function JobSearch({
           <input
             type="text"
             value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              resetPaging();
-            }}
+            onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               // Backspace in an empty box takes the last tag back out.
               if (e.key === "Backspace" && !draft && filters.terms.length > 0) {
@@ -195,7 +181,7 @@ export function JobSearch({
               aria-hidden
               className="hidden shrink-0 rounded-md border border-border px-2 py-1 text-[11px] text-muted sm:block"
             >
-              Enter to add as tag
+              Press Enter to search
             </span>
           )}
         </form>
