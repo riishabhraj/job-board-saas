@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
-import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal } from "./filters";
+import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal, categoryFromTitle, matchesLocation, regionCounts, categoryOptions, skillOptions } from "./filters";
 import { locationCountries, regionCountries } from "./geo";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
 import type { Job } from "./jobs";
@@ -286,12 +286,12 @@ describe("location filter and options", () => {
     j("remote-us", { workArrangement: "remote", eligibility: "United States", countries: ["United States"] }),
     j("unknown", {}),
   ];
-  it("lists every country with counts, most jobs first", () => {
+  it("lists every country with the roles open to someone there, most first", () => {
     const o = locationOptions(jobs);
-    assert.deepEqual(o.map((x) => [x.value, x.count]), [["India", 2], ["United States", 2]]);
+    assert.deepEqual(o.map((x) => [x.value, x.count]), [["India", 3], ["United States", 3]]);
   });
   it("matches by country, including worldwide-remote, and never mixes countries", () => {
-    const ids = (country: string) => filterJobs(jobs, { ...emptyFilters, location: country }).map((x) => x.id).sort();
+    const ids = (country: string) => filterJobs(jobs, { ...emptyFilters, locations: [country] }).map((x) => x.id).sort();
     assert.deepEqual(ids("India"), ["blr", "blr2", "world"]);
     assert.deepEqual(ids("United States"), ["remote-us", "sf", "world"]);
   });
@@ -328,7 +328,7 @@ describe("experience filter for postings that state no years", () => {
       j("stated", { title: "Backend Engineer", minYears: 3, maxYears: 5 }),
     ];
     const ids = (experience: string) =>
-      filterJobs(jobs, { ...emptyFilters, experience }).map((x) => x.id).sort();
+      filterJobs(jobs, { ...emptyFilters, experiences: [experience] }).map((x) => x.id).sort();
     assert.deepEqual(ids("0-2"), ["intern", "plain"]);
     assert.deepEqual(ids("3-5"), ["plain", "stated"]);
     assert.deepEqual(ids("6+"), ["senior"]);
@@ -345,10 +345,84 @@ describe("experience filter for postings that state no years", () => {
       j("b", { countries: ["India"], workArrangement: "remote", minYears: 3, maxYears: 5 }),
       j("c", { countries: ["India"], workArrangement: "hybrid", minYears: 3, maxYears: 5 }),
     ];
-    const f = { ...emptyFilters, location: "India", arrangement: "remote", experience: "0-2" };
+    const f = { ...emptyFilters, locations: ["India"], arrangements: ["remote"], experiences: ["0-2"] };
     // Only "a" matches. Dropping experience shows a+b; dropping Remote or
     // India shows no more than "a", so those are not suggested.
-    assert.deepEqual(relaxations(jobs, f), [{ key: "experience", label: "0–2 years", count: 2 }]);
-    assert.deepEqual(relaxations(jobs, { ...emptyFilters, location: "India" }), []);
+    assert.deepEqual(relaxations(jobs, f), [{ key: "experiences", label: "0–2 years", count: 2 }]);
+    assert.deepEqual(relaxations(jobs, { ...emptyFilters, locations: ["India"] }), []);
+  });
+});
+
+describe("multi-select filters, tags and categories", () => {
+  const j = (id: string, over: Partial<Job>): Job => ({
+    id, company: "Acme", title: "Backend Engineer", workArrangement: "unspecified", eligibility: "Unspecified",
+    countries: [], minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: null, updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+  const ids = (jobs: Job[], f: Partial<typeof emptyFilters>) =>
+    filterJobs(jobs, { ...emptyFilters, ...f }).map((x) => x.id).sort();
+
+  it("puts titles in one category, specific kinds first", () => {
+    assert.equal(categoryFromTitle("Security Engineer"), "Security");
+    assert.equal(categoryFromTitle("Product Designer"), "Design");
+    assert.equal(categoryFromTitle("Senior Product Manager"), "Product & Program");
+    assert.equal(categoryFromTitle("Data Engineer"), "Data & AI");
+    assert.equal(categoryFromTitle("Machine Learning Engineer"), "Data & AI");
+    assert.equal(categoryFromTitle("Platform Engineer"), "DevOps & Infrastructure");
+    assert.equal(categoryFromTitle("Support Engineer I"), "Solutions & Support");
+    assert.equal(categoryFromTitle("Backend Engineer"), "Engineering");
+  });
+
+  it("matches any value within a filter and all across filters", () => {
+    const jobs = [
+      j("a", { workArrangement: "remote", countries: ["India"], skills: ["Python"] }),
+      j("b", { workArrangement: "hybrid", countries: ["India"], skills: ["Go"] }),
+      j("c", { workArrangement: "on-site", countries: ["Germany"], skills: ["Python", "Go"] }),
+    ];
+    assert.deepEqual(ids(jobs, { arrangements: ["remote", "hybrid"] }), ["a", "b"]);
+    assert.deepEqual(ids(jobs, { skills: ["Go"] }), ["b", "c"]);
+    assert.deepEqual(ids(jobs, { locations: ["India"], skills: ["Go"] }), ["b"]);
+    assert.deepEqual(ids(jobs, { locations: ["India", "Germany"] }), ["a", "b", "c"]);
+  });
+
+  it("matches regions by their countries and keeps worldwide-remote open to all", () => {
+    const jobs = [
+      j("eu", { countries: ["Germany"] }),
+      j("us", { countries: ["United States"] }),
+      j("world", { workArrangement: "remote", eligibility: "Worldwide" }),
+    ];
+    assert.deepEqual(ids(jobs, { locations: ["Europe"] }), ["eu", "world"]);
+    assert.deepEqual(ids(jobs, { locations: ["Anywhere"] }), ["world"]);
+    assert.equal(matchesLocation(jobs[1], ["North America"]), true);
+    const counts = Object.fromEntries(regionCounts(jobs).map((r) => [r.value, r.count]));
+    assert.deepEqual(counts, { Anywhere: 1, "North America": 2, Europe: 2, "Latin America": 1, APAC: 1 });
+  });
+
+  it("treats each search tag as a requirement and understands shorthand", () => {
+    const jobs = [
+      j("sde", { title: "Software Engineer, Payments", skills: ["Python"] }),
+      j("pm", { title: "Product Manager" }),
+      j("data", { title: "Data Engineer", company: "Stripe" }),
+    ];
+    assert.deepEqual(ids(jobs, { terms: ["engineer"] }), ["data", "sde"]);
+    assert.deepEqual(ids(jobs, { terms: ["engineer", "python"] }), ["sde"]);
+    assert.deepEqual(ids(jobs, { terms: ["sde"] }), ["sde"]);
+    assert.deepEqual(ids(jobs, { terms: ["PM"] }), ["pm"]);
+    assert.deepEqual(ids(jobs, { terms: ["stripe", "engineer"] }), ["data"]);
+  });
+
+  it("builds options with counts", () => {
+    const jobs = [
+      j("a", { title: "Data Engineer", skills: ["Python", "SQL"] }),
+      j("b", { title: "Backend Engineer", skills: ["Python"] }),
+    ];
+    assert.deepEqual(skillOptions(jobs).map((o) => [o.value, o.count]), [["Python", 2], ["SQL", 1]]);
+    assert.deepEqual(categoryOptions(jobs).map((o) => [o.value, o.count]), [["Data & AI", 1], ["Engineering", 1]]);
+  });
+
+  it("suggests removing a tag that blocks results", () => {
+    const jobs = [j("a", { title: "Backend Engineer" }), j("b", { title: "Data Engineer" })];
+    const r = relaxations(jobs, { ...emptyFilters, terms: ["engineer", "rust"] });
+    assert.deepEqual(r, [{ key: "terms", term: "rust", label: "“rust”", count: 2 }]);
   });
 });

@@ -1,3 +1,4 @@
+import { REGIONS } from "./geo";
 import type { Job, WorkArrangement } from "./jobs";
 
 export interface ExperienceBucket {
@@ -23,36 +24,136 @@ export const arrangementLabels: Record<
   "on-site": "On-site",
 };
 
+/**
+ * Every filter is a list: within one filter any selection matches (Remote OR
+ * Hybrid), across filters all must match. Search terms are tags that must all
+ * match, so each one narrows the list.
+ */
 export interface Filters {
-  query: string;
-  location: string;
-  arrangement: string;
-  experience: string;
+  terms: string[];
+  locations: string[];
+  categories: string[];
+  skills: string[];
+  arrangements: string[];
+  experiences: string[];
 }
 
 export const emptyFilters: Filters = {
-  query: "",
-  location: "",
-  arrangement: "",
-  experience: "",
+  terms: [],
+  locations: [],
+  categories: [],
+  skills: [],
+  arrangements: [],
+  experiences: [],
 };
 
-export interface LocationOption {
+export interface FilterOption {
   value: string;
   label: string;
   count: number;
 }
+export type LocationOption = FilterOption;
 
-/** Every country that appears in the feed, most jobs first. */
-export function locationOptions(jobs: Job[]): LocationOption[] {
+/** Region choices above the country list. "Anywhere" is worldwide-remote only. */
+export const regionOptions: { value: string; label: string }[] = [
+  { value: "Anywhere", label: "Anywhere" },
+  { value: "North America", label: "North America" },
+  { value: "Europe", label: "Europe" },
+  { value: "Latin America", label: "Latin America" },
+  { value: "APAC", label: "Asia-Pacific" },
+];
+
+const isWorldwide = (j: Job) =>
+  j.workArrangement === "remote" && j.eligibility === "Worldwide";
+
+/**
+ * Open to someone in the selected places. Worldwide-remote roles are open to
+ * candidates anywhere, so they match any location choice.
+ */
+export function matchesLocation(j: Job, selected: string[]): boolean {
+  if (selected.length === 0 || isWorldwide(j)) return true;
+  return selected.some((v) => {
+    if (v === "Anywhere") return false;
+    const region = REGIONS[v];
+    return region ? j.countries.some((c) => region.includes(c)) : j.countries.includes(v);
+  });
+}
+
+// First match wins, so specific kinds come before the broad ones.
+const CATEGORY_RULES: [string, RegExp][] = [
+  ["Security", /security|appsec|infosec|cyber/i],
+  ["Design", /design|\bux\b|\bui\b/i],
+  ["Product & Program", /product manager|product management|program manager|\bpm\b/i],
+  ["Solutions & Support", /solutions?\b|support|customer engineer|sales engineer|forward[- ]deployed|developer advocate|devrel|developer relations/i],
+  ["Data & AI", /\bdata\b|machine learning|\bml\b|\bai\b|scientist|analytics|research/i],
+  ["DevOps & Infrastructure", /devops|\bsre\b|site reliability|infrastructure|platform|cloud|reliability|network/i],
+  ["QA & Testing", /\bqa\b|quality|\btest(?:ing)?\b|sdet/i],
+];
+
+export function categoryFromTitle(title: string): string {
+  return CATEGORY_RULES.find(([, re]) => re.test(title))?.[0] ?? "Engineering";
+}
+
+/** Short forms job seekers type, mapped to how companies write the title. */
+const SYNONYMS: Record<string, string[]> = {
+  sde: ["software development engineer", "software engineer"],
+  "sde 1": ["software development engineer", "software engineer"],
+  sde1: ["software development engineer", "software engineer"],
+  "sde-1": ["software development engineer", "software engineer"],
+  swe: ["software engineer"],
+  pm: ["product manager"],
+  apm: ["associate product manager"],
+  ml: ["machine learning"],
+  sre: ["site reliability"],
+  qa: ["quality"],
+  fullstack: ["full stack", "full-stack"],
+  "full stack": ["full-stack", "fullstack"],
+};
+
+function matchesTerm(haystack: string, term: string): boolean {
+  const t = term.trim().toLowerCase();
+  if (!t) return true;
+  return [t, ...(SYNONYMS[t] ?? [])].some((alt) => haystack.includes(alt));
+}
+
+const countBy = (jobs: Job[], keys: (j: Job) => string[]): FilterOption[] => {
   const counts = new Map<string, number>();
-  for (const j of jobs) {
-    for (const c of j.countries) counts.set(c, (counts.get(c) ?? 0) + 1);
-  }
+  for (const j of jobs) for (const k of new Set(keys(j))) counts.set(k, (counts.get(k) ?? 0) + 1);
   return [...counts]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([value, count]) => ({ value, label: value, count }));
+};
+
+/** Every country that appears in the feed, with the roles open to someone there. */
+export function locationOptions(jobs: Job[]): FilterOption[] {
+  const seen = new Set<string>();
+  for (const j of jobs) for (const c of j.countries) seen.add(c);
+  return [...seen]
+    .map((value) => ({ value, label: value, count: jobs.filter((j) => matchesLocation(j, [value])).length }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
+
+export function regionCounts(jobs: Job[]): FilterOption[] {
+  return regionOptions.map((r) => ({
+    ...r,
+    count: jobs.filter((j) => matchesLocation(j, [r.value])).length,
+  }));
+}
+
+export const categoryOptions = (jobs: Job[]) => countBy(jobs, (j) => [categoryFromTitle(j.title)]);
+export const skillOptions = (jobs: Job[]) => countBy(jobs, (j) => j.skills);
+export const arrangementOptions = (jobs: Job[]): FilterOption[] =>
+  (Object.entries(arrangementLabels) as [string, string][]).map(([value, label]) => ({
+    value,
+    label,
+    count: jobs.filter((j) => j.workArrangement === value).length,
+  }));
+export const experienceOptions = (jobs: Job[]): FilterOption[] =>
+  experienceBuckets.map((b) => ({
+    value: b.value,
+    label: b.label,
+    count: jobs.filter((j) => matchesExperience(j, b)).length,
+  }));
 
 const SENIOR_TITLE =
   /\b(senior|sr|staff|principal|lead|director|head of|architect|vp|vice president|distinguished|fellow|engineering manager)\b/i;
@@ -95,57 +196,67 @@ export function hasExperienceSignal(j: Job): boolean {
 }
 
 export function filterJobs(jobs: Job[], f: Filters): Job[] {
-  const q = f.query.trim().toLowerCase();
-  const bucket = experienceBuckets.find((b) => b.value === f.experience);
+  const buckets = experienceBuckets.filter((b) => f.experiences.includes(b.value));
 
   return jobs.filter((j) => {
-    if (q) {
-      const haystack = [j.company, j.title, j.city ?? "", ...j.skills]
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.includes(q)) return false;
+    if (f.terms.length > 0) {
+      const haystack = [j.company, j.title, j.city ?? "", ...j.skills].join(" ").toLowerCase();
+      if (!f.terms.every((t) => matchesTerm(haystack, t))) return false;
     }
-    if (f.location) {
-      // Worldwide-remote roles are open to candidates anywhere.
-      const open = j.workArrangement === "remote" && j.eligibility === "Worldwide";
-      if (!open && !j.countries.includes(f.location)) return false;
-    }
-    if (f.arrangement && j.workArrangement !== f.arrangement) return false;
-    if (bucket && !matchesExperience(j, bucket)) return false;
+    if (!matchesLocation(j, f.locations)) return false;
+    if (f.categories.length > 0 && !f.categories.includes(categoryFromTitle(j.title))) return false;
+    if (f.skills.length > 0 && !f.skills.some((s) => j.skills.includes(s))) return false;
+    if (f.arrangements.length > 0 && !f.arrangements.includes(j.workArrangement)) return false;
+    if (buckets.length > 0 && !buckets.some((b) => matchesExperience(j, b))) return false;
     return true;
   });
 }
 
 export interface Relaxation {
-  key: "query" | "location" | "arrangement" | "experience";
+  key: keyof Filters;
+  /** For a search tag, which one. */
+  term?: string;
   label: string;
-  /** Matches if this one filter were removed. */
+  /** Matches if this one filter (or tag) were removed. */
   count: number;
 }
 
+const GROUP_NOUN: Record<Exclude<keyof Filters, "terms">, string> = {
+  locations: "locations",
+  categories: "categories",
+  skills: "skills",
+  arrangements: "work arrangements",
+  experiences: "experience levels",
+};
+
 /**
- * For a thin result list: which single filter, if removed, would show more
- * roles. Biggest gain first; filters that would not help are left out.
+ * For a thin result list: which single filter or search tag, if removed, would
+ * show more roles. Biggest gain first; ones that would not help are left out.
  */
 export function relaxations(jobs: Job[], f: Filters): Relaxation[] {
   const current = filterJobs(jobs, f).length;
-  const active: [Relaxation["key"], string][] = [];
-  if (f.query.trim()) active.push(["query", `“${f.query.trim()}”`]);
-  if (f.location) active.push(["location", f.location]);
-  if (f.arrangement) {
-    active.push(["arrangement", arrangementLabels[f.arrangement as keyof typeof arrangementLabels] ?? f.arrangement]);
-  }
-  const bucket = experienceBuckets.find((b) => b.value === f.experience);
-  if (bucket) active.push(["experience", bucket.label]);
+  const out: Relaxation[] = [];
 
-  return active
-    .map(([key, label]) => ({
+  for (const term of f.terms) {
+    const count = filterJobs(jobs, { ...f, terms: f.terms.filter((t) => t !== term) }).length;
+    out.push({ key: "terms", term, label: `“${term}”`, count });
+  }
+  for (const key of Object.keys(GROUP_NOUN) as (keyof typeof GROUP_NOUN)[]) {
+    const values = f[key];
+    if (values.length === 0) continue;
+    const labelOf = (v: string) =>
+      key === "arrangements"
+        ? arrangementLabels[v as keyof typeof arrangementLabels] ?? v
+        : key === "experiences"
+          ? experienceBuckets.find((b) => b.value === v)?.label ?? v
+          : regionOptions.find((r) => r.value === v)?.label ?? v;
+    out.push({
       key,
-      label,
-      count: filterJobs(jobs, { ...f, [key]: "" }).length,
-    }))
-    .filter((r) => r.count > current)
-    .sort((a, b) => b.count - a.count);
+      label: values.length === 1 ? labelOf(values[0]) : `${values.length} ${GROUP_NOUN[key]}`,
+      count: filterJobs(jobs, { ...f, [key]: [] }).length,
+    });
+  }
+  return out.filter((r) => r.count > current).sort((a, b) => b.count - a.count);
 }
 
 export function eligibilityLabel(j: Job): string {

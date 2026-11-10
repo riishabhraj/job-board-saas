@@ -201,3 +201,24 @@ export function regionCountries(eligibility: string): string[] {
   );
   return key ? REGIONS[key] : [];
 }
+
+const COUNTRY_CODES: Record<string, string> = {
+  "United States": "US", "United Kingdom": "GB", Canada: "CA", India: "IN", Germany: "DE",
+  France: "FR", Spain: "ES", Portugal: "PT", Italy: "IT", Netherlands: "NL", Ireland: "IE",
+  Poland: "PL", Sweden: "SE", Norway: "NO", Denmark: "DK", Finland: "FI", Switzerland: "CH",
+  Austria: "AT", Belgium: "BE", Czechia: "CZ", Romania: "RO", Greece: "GR", Luxembourg: "LU",
+  Estonia: "EE", Lithuania: "LT", Ukraine: "UA", Israel: "IL", Turkey: "TR",
+  "United Arab Emirates": "AE", Singapore: "SG", Japan: "JP", "South Korea": "KR",
+  Australia: "AU", "New Zealand": "NZ", China: "CN", "Hong Kong": "HK", Taiwan: "TW",
+  Philippines: "PH", Indonesia: "ID", Malaysia: "MY", Vietnam: "VN", Thailand: "TH",
+  Pakistan: "PK", Bangladesh: "BD", Brazil: "BR", Mexico: "MX", Argentina: "AR",
+  Colombia: "CO", Chile: "CL", "Costa Rica": "CR", "South Africa": "ZA", Nigeria: "NG",
+  Kenya: "KE", Egypt: "EG",
+};
+
+/** Flag emoji for a canonical country name, or null if we have no code for it. */
+export function flagEmoji(country: string): string | null {
+  const code = COUNTRY_CODES[country];
+  if (!code) return null;
+  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { buttonClass } from "./Button";
 import {
   ago,
@@ -12,7 +13,7 @@ import { LIST_COLUMNS } from "./ListHeader";
 import { trackEvent } from "@/lib/analytics";
 import { safeUrl } from "@/lib/links";
 
-export function JobRow({ job, now }: { job: Job; now: number }) {
+function JobRowView({ job, now }: { job: Job; now: number }) {
   const href = job.isExample ? null : safeUrl(job.applyUrl);
 
   return (
@@ -73,3 +74,6 @@ export function JobRow({ job, now }: { job: Job; now: number }) {
     </li>
   );
 }
+
+/** Memoized so typing in the search box does not redraw every row. */
+export const JobRow = memo(JobRowView);
