@@ -47,6 +47,57 @@ export const emptyFilters: Filters = {
   experiences: [],
 };
 
+const GROUP_PARAM = {
+  locations: "location",
+  categories: "category",
+  skills: "skill",
+  arrangements: "arrangement",
+  experiences: "experience",
+} as const;
+
+/** Trims stray punctuation and spaces from a search tag ("platfpr," -> "platfpr"). */
+export function cleanTag(raw: string): string {
+  return raw
+    .replace(/^[^\p{L}\p{N}.]+|[^\p{L}\p{N}+#]+$/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
+}
+
+type Params = Record<string, string | string[] | undefined>;
+const all = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v === undefined ? [] : [v]);
+
+/**
+ * Filters from a /jobs link: ?q=engineer&q=python&location=India,Europe&
+ * arrangement=remote&experience=0-2. Unknown params are ignored; the page
+ * drops values that are not real options (see pruneFilters).
+ */
+export function filtersFromParams(params: Params): Filters {
+  const list = (key: string) =>
+    all(params[key])
+      .flatMap((v) => v.split(","))
+      .map((v) => v.trim())
+      .filter(Boolean)
+      .slice(0, 12);
+  const terms = all(params.q).map(cleanTag).filter(Boolean).slice(0, 8);
+  const out: Filters = { ...emptyFilters, terms: [...new Set(terms)] };
+  for (const [group, param] of Object.entries(GROUP_PARAM)) {
+    out[group as keyof typeof GROUP_PARAM] = [...new Set(list(param))];
+  }
+  return out;
+}
+
+/** The query string for a set of filters, so a search can be shared. */
+export function filtersToParams(f: Filters): URLSearchParams {
+  const qs = new URLSearchParams();
+  f.terms.forEach((t) => qs.append("q", t));
+  for (const [group, param] of Object.entries(GROUP_PARAM)) {
+    const values = f[group as keyof typeof GROUP_PARAM];
+    if (values.length > 0) qs.set(param, values.join(","));
+  }
+  return qs;
+}
+
 export interface FilterOption {
   value: string;
   label: string;
@@ -154,6 +205,20 @@ export const experienceOptions = (jobs: Job[]): FilterOption[] =>
     label: b.label,
     count: jobs.filter((j) => matchesExperience(j, b)).length,
   }));
+
+/** Keeps only values that are real options for these jobs (links can say anything). */
+export function pruneFilters(f: Filters, jobs: Job[]): Filters {
+  const keep = (values: string[], options: { value: string }[]) =>
+    values.filter((v) => options.some((o) => o.value === v));
+  return {
+    terms: f.terms,
+    locations: keep(f.locations, [...regionOptions, ...locationOptions(jobs)]),
+    categories: keep(f.categories, categoryOptions(jobs)),
+    skills: keep(f.skills, skillOptions(jobs)),
+    arrangements: keep(f.arrangements, arrangementOptions(jobs)),
+    experiences: keep(f.experiences, experienceBuckets),
+  };
+}
 
 const SENIOR_TITLE =
   /\b(senior|sr|staff|principal|lead|director|head of|architect|vp|vice president|distinguished|fellow|engineering manager)\b/i;

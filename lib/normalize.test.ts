@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
-import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal, categoryFromTitle, matchesLocation, regionCounts, categoryOptions, skillOptions } from "./filters";
+import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal, categoryFromTitle, matchesLocation, regionCounts, categoryOptions, skillOptions, cleanTag, filtersFromParams, filtersToParams, pruneFilters } from "./filters";
 import { locationCountries, regionCountries } from "./geo";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
 import type { Job } from "./jobs";
@@ -424,5 +424,54 @@ describe("multi-select filters, tags and categories", () => {
     const jobs = [j("a", { title: "Backend Engineer" }), j("b", { title: "Data Engineer" })];
     const r = relaxations(jobs, { ...emptyFilters, terms: ["engineer", "rust"] });
     assert.deepEqual(r, [{ key: "terms", term: "rust", label: "“rust”", count: 2 }]);
+  });
+});
+
+describe("search links and tag cleanup", () => {
+  const j = (id: string, over: Partial<Job>): Job => ({
+    id, company: "Acme", title: "Backend Engineer", workArrangement: "unspecified", eligibility: "Unspecified",
+    countries: [], minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: null, updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+
+  it("cleans stray punctuation but keeps real symbols", () => {
+    assert.equal(cleanTag("platfpr,"), "platfpr");
+    assert.equal(cleanTag("  , devops ;"), "devops");
+    assert.equal(cleanTag("c++"), "c++");
+    assert.equal(cleanTag("C#"), "C#");
+    assert.equal(cleanTag(".NET"), ".NET");
+    assert.equal(cleanTag("full   stack"), "full stack");
+    assert.equal(cleanTag("!!!"), "");
+  });
+
+  it("reads filters from a link, including the old ?q= form", () => {
+    const f = filtersFromParams({
+      q: ["engineer", "platfpr,", "engineer"],
+      location: "India,Europe",
+      arrangement: "remote",
+      experience: ["0-2"],
+      other: "ignored",
+    });
+    assert.deepEqual(f.terms, ["engineer", "platfpr"]);
+    assert.deepEqual(f.locations, ["India", "Europe"]);
+    assert.deepEqual(f.arrangements, ["remote"]);
+    assert.deepEqual(f.experiences, ["0-2"]);
+    assert.deepEqual(filtersFromParams({ q: "backend" }).terms, ["backend"]);
+    assert.deepEqual(filtersFromParams({}), emptyFilters);
+  });
+
+  it("round-trips through a link", () => {
+    const f = { ...emptyFilters, terms: ["devops"], locations: ["India", "Europe"], categories: ["Data & AI"], skills: ["C++"] };
+    assert.deepEqual(filtersFromParams(Object.fromEntries(filtersToParams(f))), f);
+    assert.equal(filtersToParams(emptyFilters).toString(), "");
+  });
+
+  it("drops link values that are not real options", () => {
+    const jobs = [j("a", { countries: ["India"], workArrangement: "remote", skills: ["Python"] })];
+    const f = pruneFilters(
+      { ...emptyFilters, terms: ["x"], locations: ["India", "Atlantis"], arrangements: ["remote", "moon"], experiences: ["0-2", "99"], skills: ["Python", "Cobol"], categories: ["Nope"] },
+      jobs,
+    );
+    assert.deepEqual(f, { terms: ["x"], locations: ["India"], categories: [], skills: ["Python"], arrangements: ["remote"], experiences: ["0-2"] });
   });
 });

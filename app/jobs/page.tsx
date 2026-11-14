@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Footer } from "@/components/Footer";
 import { JobSearch } from "@/components/JobSearch";
 import { Navbar } from "@/components/Navbar";
+import { filtersFromParams } from "@/lib/filters";
 import { getJobs } from "@/lib/getJobs";
 import { requestTime } from "@/lib/time";
 
@@ -25,11 +26,10 @@ export const maxDuration = 60;
 export default async function Jobs({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await connection();
-  const { q } = await searchParams;
-  const initialQuery = Array.isArray(q) ? (q[0] ?? "") : (q ?? "");
+  const initialFilters = filtersFromParams(await searchParams);
   const data = await getJobs();
   // Passed down so server and client render identical freshness labels.
   const now = requestTime();
@@ -41,7 +41,7 @@ export default async function Jobs({
         <JobSearch
           jobs={data.jobs}
           now={now}
-          initialQuery={initialQuery}
+          initialFilters={initialFilters}
           live={data.live}
           fetchedAt={data.fetchedAt}
           totalCount={data.totalCount}

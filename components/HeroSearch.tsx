@@ -1,9 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./Button";
 import { cleanTerm, trackEvent } from "@/lib/analytics";
+
+/** One-click searches that open /jobs already filtered. */
+const EXAMPLES: { label: string; href: string }[] = [
+  { label: "Remote jobs open to India", href: "/jobs?location=India&arrangement=remote" },
+  { label: "Entry-level engineer", href: "/jobs?q=engineer&experience=0-2" },
+  { label: "Remote roles in Europe", href: "/jobs?location=Europe&arrangement=remote" },
+  { label: "Data & AI jobs", href: "/jobs?category=Data+%26+AI" },
+];
 
 export function HeroSearch() {
   const router = useRouter();
@@ -34,6 +43,19 @@ export function HeroSearch() {
             Search jobs
           </Button>
         </form>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[13px] text-muted">Try:</span>
+          {EXAMPLES.map((e) => (
+            <Link
+              key={e.label}
+              href={e.href}
+              onClick={() => trackEvent("example_search_clicked", { example: e.label })}
+              className="rounded-full border border-border bg-surface-2 px-3.5 py-1.5 text-[13px] text-text transition-colors hover:border-accent"
+            >
+              {e.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

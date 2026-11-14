@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "./Button";
 import { JobRow } from "./JobRow";
 import { ListHeader } from "./ListHeader";
@@ -10,12 +10,15 @@ import {
   ago,
   arrangementOptions,
   categoryOptions,
+  cleanTag,
   compareNewest,
   emptyFilters,
   experienceOptions,
   filterJobs,
+  filtersToParams,
   hasExperienceSignal,
   locationOptions,
+  pruneFilters,
   regionCounts,
   relaxations,
   skillOptions,
@@ -48,7 +51,7 @@ const EVENT_NAME: Record<GroupKey, string> = {
 export function JobSearch({
   jobs,
   now,
-  initialQuery = "",
+  initialFilters = emptyFilters,
   live,
   fetchedAt,
   totalCount,
@@ -56,16 +59,16 @@ export function JobSearch({
 }: {
   jobs: Job[];
   now: number;
-  initialQuery?: string;
+  /** From the link, so a shared search opens the same list. */
+  initialFilters?: Filters;
   live: boolean;
   fetchedAt: string;
   totalCount: number;
   companyCount: number;
 }) {
-  const [filters, setFilters] = useState<Filters>({
-    ...emptyFilters,
-    terms: initialQuery.trim() ? [initialQuery.trim()] : [],
-  });
+  const [filters, setFilters] = useState<Filters>(() =>
+    pruneFilters(initialFilters, jobs),
+  );
   const [draft, setDraft] = useState("");
   const [shown, setShown] = useState(PAGE_SIZE);
 
@@ -108,9 +111,28 @@ export function JobSearch({
     [thin, jobs, effective],
   );
 
+  // Keep the address bar in step with the search so the link can be shared.
+  useEffect(() => {
+    const qs = filtersToParams(filters).toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      qs ? `?${qs}` : window.location.pathname,
+    );
+  }, [filters]);
+
+  // Tags that match nothing even on their own are usually typos.
+  const deadTerms = useMemo(
+    () =>
+      filters.terms.filter(
+        (t) => filterJobs(jobs, { ...emptyFilters, terms: [t] }).length === 0,
+      ),
+    [jobs, filters.terms],
+  );
+
   const resetPaging = () => setShown(PAGE_SIZE);
   const addTag = () => {
-    const t = draft.trim();
+    const t = cleanTag(draft);
     if (!t) return;
     setDraft("");
     resetPaging();
@@ -210,6 +232,13 @@ export function JobSearch({
               </span>
             ))}
           </div>
+        )}
+
+        {deadTerms.length > 0 && (
+          <p className="text-[13px] text-muted" role="status">
+            No roles match {deadTerms.map((t) => `“${t}”`).join(", ")} on its own
+            — check the spelling or try a broader word.
+          </p>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
