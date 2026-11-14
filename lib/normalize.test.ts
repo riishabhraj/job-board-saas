@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { normalizeAshby } from "./ashby";
+import { selectFeed, isPriority } from "./feed";
 import { compareNewest, dateLabel, eligibilityLabel, experienceLabel, filterJobs, locationOptions, emptyFilters, pickHighlights, seniorityFromTitle, relaxations, hasExperienceSignal, categoryFromTitle, matchesLocation, regionCounts, categoryOptions, skillOptions, cleanTag, filtersFromParams, filtersToParams, pruneFilters } from "./filters";
 import { locationCountries, regionCountries } from "./geo";
 import { normalize as normalizeGreenhouse } from "./greenhouse";
@@ -473,5 +474,49 @@ describe("search links and tag cleanup", () => {
       jobs,
     );
     assert.deepEqual(f, { terms: ["x"], locations: ["India"], categories: [], skills: ["Python"], arrangements: ["remote"], experiences: ["0-2"] });
+  });
+});
+
+describe("feed selection", () => {
+  const j = (id: string, over: Partial<Job>): Job => ({
+    id, company: "Acme", title: "Backend Engineer", workArrangement: "on-site", eligibility: "Berlin",
+    countries: ["Germany"], minYears: 4, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: "2026-01-01T00:00:00Z", updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test", ...over,
+  });
+
+  it("flags entry-level, India and worldwide-remote roles", () => {
+    assert.equal(isPriority(j("a", {})), false);
+    assert.equal(isPriority(j("b", { title: "Software Engineer, New Grad" })), true);
+    assert.equal(isPriority(j("c", { employmentType: "Internship" })), true);
+    assert.equal(isPriority(j("d", { minYears: 1, maxYears: 3 })), true);
+    assert.equal(isPriority(j("e", { countries: ["India"] })), true);
+    assert.equal(isPriority(j("f", { workArrangement: "remote", eligibility: "Worldwide", countries: [] })), true);
+    assert.equal(isPriority(j("g", { workArrangement: "remote", eligibility: "United States", countries: ["United States"] })), false);
+  });
+
+  it("keeps priority roles when the feed is cut, even if they are older", () => {
+    const newest = Array.from({ length: 5 }, (_, i) => j(`new${i}`, { postedAt: `2026-06-0${i + 1}T00:00:00Z` }));
+    const oldIndia = j("old-india", { countries: ["India"], postedAt: "2025-01-01T00:00:00Z" });
+    const oldFresher = j("old-fresher", { title: "Engineering Intern", postedAt: "2025-01-02T00:00:00Z" });
+    const picked = selectFeed([...newest, oldIndia, oldFresher], 4).map((x) => x.id);
+    assert.equal(picked.length, 4);
+    assert.ok(picked.includes("old-india") && picked.includes("old-fresher"));
+    assert.deepEqual(selectFeed([oldIndia, ...newest], 99).length, 6);
+  });
+});
+
+describe("remote eligibility names", () => {
+  const r = (eligibility: string): Job => ({
+    id: "x", company: "A", title: "Engineer", workArrangement: "remote", eligibility,
+    countries: [], minYears: null, maxYears: null, employmentType: "Full-time", skills: [],
+    postedAt: null, updatedAt: null, source: "Greenhouse", lastVerifiedAt: CHECKED, applyUrl: "https://x.test",
+  });
+  it("shows one name per country and leaves regions alone", () => {
+    assert.equal(eligibilityLabel(r("U.S.")), "Remote — United States eligible");
+    assert.equal(eligibilityLabel(r("United States")), "Remote — United States eligible");
+    assert.equal(eligibilityLabel(r("Republic of Ireland")), "Remote — Ireland eligible");
+    assert.equal(eligibilityLabel(r("Europe")), "Remote — Europe eligible");
+    assert.equal(eligibilityLabel(r("EMEA")), "Remote — EMEA eligible");
+    assert.equal(eligibilityLabel(r("Worldwide")), "Remote — Worldwide");
   });
 });

@@ -166,7 +166,7 @@ export function JobSearch({
 
   const scope =
     totalCount > jobs.length
-      ? `the newest ${jobs.length} of ${totalCount} technology roles`
+      ? `${jobs.length} of ${totalCount} technology roles, entry-level and India-open roles first,`
       : `${jobs.length} technology ${jobs.length === 1 ? "role" : "roles"}`;
   const boards = `${companyCount} company ${companyCount === 1 ? "board" : "boards"}`;
 

@@ -1,4 +1,4 @@
-import { REGIONS } from "./geo";
+import { locationCountries, REGIONS } from "./geo";
 import type { Job, WorkArrangement } from "./jobs";
 
 export interface ExperienceBucket {
@@ -324,13 +324,19 @@ export function relaxations(jobs: Job[], f: Filters): Relaxation[] {
   return out.filter((r) => r.count > current).sort((a, b) => b.count - a.count);
 }
 
+/** "U.S." and "United States" are the same place; show one name for it. */
+function canonicalPlace(place: string): string {
+  const countries = locationCountries(place);
+  return countries.length === 1 ? countries[0] : place;
+}
+
 export function eligibilityLabel(j: Job): string {
   if (j.workArrangement === "remote") {
     if (j.eligibility === "Worldwide") return "Remote — Worldwide";
     if (j.eligibility === "Unspecified") {
       return "Remote — location not specified";
     }
-    return `Remote — ${j.eligibility} eligible`;
+    return `Remote — ${canonicalPlace(j.eligibility)} eligible`;
   }
   const place = j.city ?? "Location not listed";
   if (j.workArrangement === "unspecified") return place;

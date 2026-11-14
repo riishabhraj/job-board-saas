@@ -4,12 +4,13 @@ import { fetchAshby } from "./ashby";
 import { companies, type Company } from "./companies";
 import { fetchGreenhouse } from "./greenhouse";
 import { fetchLever } from "./lever";
-import { compareNewest } from "./filters";
+import { selectFeed } from "./feed";
 import { safeUrl } from "./links";
 import { isTechRole } from "./normalize";
 import { jobs as sampleJobs, type Job } from "./jobs";
 
-const MAX_JOBS = 600;
+// Entry-level, India and worldwide-remote roles are kept first (see selectFeed).
+const MAX_JOBS = 1500;
 const REVALIDATE_SECONDS = 15 * 60;
 
 export interface JobsResult {
@@ -58,9 +59,8 @@ async function loadLiveJobs(): Promise<JobsResult> {
 
   if (all.length === 0) throw new Error("no jobs fetched from any board");
 
-  all.sort(compareNewest);
   return {
-    jobs: all.slice(0, MAX_JOBS),
+    jobs: selectFeed(all, MAX_JOBS),
     live: true,
     companyCount,
     totalCount: all.length,
@@ -71,7 +71,7 @@ async function loadLiveJobs(): Promise<JobsResult> {
 // Failures throw, so they are not cached and the next request retries.
 // The cache survives deployments, so bump the key whenever the filtering or
 // normalization rules change; otherwise old results are served until expiry.
-const cachedLoad = unstable_cache(loadLiveJobs, ["live-jobs-v3"], {
+const cachedLoad = unstable_cache(loadLiveJobs, ["live-jobs-v4"], {
   revalidate: REVALIDATE_SECONDS,
 });
 
