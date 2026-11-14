@@ -71,7 +71,7 @@ async function loadLiveJobs(): Promise<JobsResult> {
 // Failures throw, so they are not cached and the next request retries.
 // The cache survives deployments, so bump the key whenever the filtering or
 // normalization rules change; otherwise old results are served until expiry.
-const cachedLoad = unstable_cache(loadLiveJobs, ["live-jobs-v4"], {
+const cachedLoad = unstable_cache(loadLiveJobs, ["live-jobs-v5"], {
   revalidate: REVALIDATE_SECONDS,
 });
 
