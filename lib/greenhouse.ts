@@ -16,7 +16,7 @@ export interface GreenhouseJob {
 async function fetchBoard(token: string): Promise<GreenhouseJob[]> {
   const res = await fetch(
     `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(token)}/jobs?content=true`,
-    { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    { cache: "no-store", signal: AbortSignal.timeout(35_000) },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const body = (await res.json()) as { jobs?: GreenhouseJob[] };

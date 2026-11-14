@@ -54,7 +54,7 @@ export async function fetchAshby(
 ): Promise<Job[]> {
   const res = await fetch(
     `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(company.token)}`,
-    { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    { cache: "no-store", signal: AbortSignal.timeout(35_000) },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const body = (await res.json()) as { jobs?: AshbyJob[] };

@@ -57,7 +57,7 @@ export async function fetchLever(
 ): Promise<Job[]> {
   const res = await fetch(
     `https://api.lever.co/v0/postings/${encodeURIComponent(company.token)}?mode=json`,
-    { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    { cache: "no-store", signal: AbortSignal.timeout(35_000) },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const raw = (await res.json()) as LeverPosting[];

@@ -11,6 +11,9 @@ import { getJobs } from "@/lib/getJobs";
 import { requestTime } from "@/lib/time";
 import { connection } from "next/server";
 
+// The first visit after the feed cache expires fetches every company board.
+export const maxDuration = 60;
+
 export default async function Home() {
   // Rendered per request so "posted x ago" labels are accurate; the job feed
   // itself is cached for ~15 minutes.
